@@ -1,0 +1,186 @@
+
+0. DB연동
+Nuget 패키지 관리자 > MySQL.Data 라이브러리 설치
+
+-  DataReader
+ ```csharp
+            //1. db연결문자열
+            string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+            //2. 사용쿼리
+            string query = "SELECT Division,Names FROM divtbl";
+
+            List<KeyValuePair<string, string>> divisions = new List<KeyValuePair<string, string>>();
+
+            //3. db연결, 명령, 리더
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) 
+            {
+                try 
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read()) 
+                    {
+                        var division = reader.GetString("Division");
+                        var name = reader.GetString("Names");
+                        divisions.Add(new KeyValuePair<string, string> (division, name));
+                        
+                    }
+                }
+                catch (MySqlException ex)
+                {
+                
+                }
+                CboDivisions.ItemsSource = divisions;
+            }
+        ```
+
+- 데이터어댑터
+  ```csharp
+        string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+        string query = "SELECT Idx,Author,Division,Names,ReleaseDate,ISBN,Price FROM bookstbl";
+
+        using (MySqlConnection conn = new MySqlConnection(connectionString)) 
+        {
+            try 
+            {
+                conn.Open();
+                MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
+                DataTable dt = new DataTable();
+                adapter.Fill(dt);
+
+                GrdBooks.ItemsSource = dt.DefaultView;
+            }
+            catch (MySqlException ex)
+            {
+            
+            }
+        }
+        ```
+
+
+1.  DataGrid + SqlDataAdapter
+ ```xml
+         <DataGrid x:Name="GrdBooks" Grid.Row="0" Grid.Column="0" Margin="5" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
+                <DataGridTextColumn Binding="{Binding Names}" Header="책제목"/>
+                <DataGridTextColumn Binding="{Binding ReleaseDate}" Header="출판일"/>
+                <DataGridTextColumn Binding="{Binding Author}" Header="저자"/>
+                <DataGridTextColumn Binding="{Binding Division}" Header="장르"/>
+                <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN"/>
+                <DataGridTextColumn Binding="{Binding Price}" Header="책가격"/>
+            </DataGrid.Columns>
+        </DataGrid>
+``` 
+
+2. DataGrid 한 행 선택한 것을 DataRowView로 형변환
+        ```csharp
+        // DATAGRID에서 더블클릭했을 때 이벤트- 선택한 그리드의 레코드값이 오른쪽 GROUPBOX에 출력함
+        private void GrdBooks_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+                  if (GrdBooks.SelectedItems.Count ==1) 
+            {
+                 var item = GrdBooks.SelectedItems[0] as DataRowView;
+                
+                NUD.Value = Convert.ToDouble(item.Row["Idx"]);
+                CboDivisions.SelectedValue = Convert.ToString(item.Row["Division"]);
+                TxtBookAuthor.Text = Convert.ToString(item.Row["Author"]);
+                TxtBookName.Text= Convert.ToString(item.Row["Names"]);
+                TxtISBN.Text = Convert.ToString(item.Row["ISBN"]);
+                TxtPrice.Text = Convert.ToString(item.Row["Price"]);
+                DP.Text = Convert.ToString(item.Row["ReleaseDate"]);
+            }
+        }
+        ```
+3. WPF 전통적인 C#방식
+MainWindow.xaml에서 디자인
+MainWindow.xaml.cs에서 코드작성
+
+4. WPF MVVM방식
+4-1.View폴더-MainWindow.xaml 디자인
+
+4-2.ViewModel폴더-MainViewModel.cs 생성
+public class MainViewModel : INotifyPropertyChanged
+{   public MainViewModel()
+    {
+        LoadControlFromDb();
+        LoadGridFromDb();
+    }
+
+    //그룹박스의 콤보박스에 아이템 넣기 위해서
+    private void LoadControlFromDb()
+    {
+        //1. db연결문자열
+        string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+        //2. 사용쿼리
+        string query = "SELECT Division,Names FROM divtbl";
+
+        List<KeyValuePair<string, string>> divisions = new List<KeyValuePair<string, string>>();
+
+        //3. db연결, 명령, 리더
+        using (MySqlConnection conn = new MySqlConnection(connectionString))
+        {
+            try
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var division = reader.GetString("Division");
+                    var name = reader.GetString("Names");
+                    divisions.Add(new KeyValuePair<string, string>(division, name));
+                }
+            }
+            catch (MySqlException ex)
+            {
+            }            
+        }
+    }
+    // DATAGRID 컨트롤에 로드되는 데이터
+    private void LoadGridFromDb()
+    {
+        string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+        string query = "SELECT b.Idx,b.Author,b.Division ,b.Names, b.ReleaseDate,b.ISBN,b.Price, d.Names as dNames FROM bookstbl b, divtbl d WHERE b.Division = d.Division order by b.Idx";
+
+        using (MySqlConnection conn = new MySqlConnection(connectionString))
+        {
+            try
+            {
+                conn.Open();
+                MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
+                DataTable dt = new DataTable();
+                adapter.Fill(dt);           
+            }
+            catch (MySqlException ex)
+            {
+            }
+        }
+    }
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+
+4-3.Model폴더-Book.cs 생성
+public class Book : INotifyPropertyChanged
+        {
+            public int Idx {  get; set; }
+            public string Names { get; set; }
+            public string Author {  get; set; }
+            public string Division {  get; set; }
+            public string DNames { get; set; }
+
+            public string ISBN {  get; set; }   
+            public int Price {  get; set; }
+
+            public DateTime ReleaseDate {  get; set; }
+            
+            //위의 여덟개의 값이 기존상태에서 변경이 되면 발생하는 이벤트
+            //사용자가 클릭같은 거로 발생하는 이벤트가 아님
+            public event PropertyChangedEventHandler? PropertyChanged;
+        }
+
+
+4-4. app.xaml에서 StartupUri 수정
+ StartupUri="/View/MainWindow.xaml"
