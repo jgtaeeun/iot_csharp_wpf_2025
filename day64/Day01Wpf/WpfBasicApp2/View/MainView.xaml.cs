@@ -15,9 +15,9 @@ namespace WpfBasicApp2
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class MainView : MetroWindow
     {
-        public MainWindow()
+        public MainView()
         {
             InitializeComponent();
         }

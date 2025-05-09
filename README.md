@@ -225,8 +225,15 @@ iot 개발자 wpf 학습
     - 전통적인 C#방식은 사용자가 이벤트발생시키기 때문에 발생시기를 바로 알 수 있음
     - MVVM방식은 C#이 변화를 주시하고 있어야 함. 상태가 바뀌면 변화를 줘야함
     - <img src='./day64/mvvm.png' width=600>
+- MVVM  장단점
+    - View <-> ViewModel 간 데이터 자동 연동
+    - 로직 분리로 구조가 명확해짐. 자기할일만 하면 됨.
+    - 팀으로 개발시 역할분담이 확실. 팀프로젝트에 알맞음
+    - 테스트와 유지보수는 쉬움
+    - 구조가 복잡. 디버깅이 어려움.
+    - 스케일이 커짐
 
-### WPF MVVM 연습 [MVVM DB연동 디자인](./day64/Day01Wpf/WpfBasicApp2/View/MainWindow.xaml) [MVVM DB연동 소스](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
+### WPF MVVM 연습 [MVVM DB연동 디자인](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [MVVM DB연동 소스](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
 1. 프로젝트 생성 , app.xaml, MainWindow.xaml, MainWindow.axml.cs 수정
 2. WPF 바인딩 연습시 사용한 MainWindow.xaml의 UI 복사
 3. Model, View, ViewModel 폴더 생성
@@ -261,3 +268,201 @@ iot 개발자 wpf 학습
 7. ViewModel폴더 내 MainViewModel.cs 생성
     - INotifyPropertyChanged 인터페이스 : 객체내의 어떠한 속성값이 변경되면 상태를 C#에게 알려주는 기능
     - PropertyChangedEventHandler 이벤트 생성
+
+## 65일차(5/9)
+### WPF MVVM 연습 [MVVM DB연동 디자인](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [MVVM DB연동 소스](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
+8. View와 ViewModel 연동 준비작업
+    - MainViewModel.cs 에 변화알림 이벤트 
+    ```csharp
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged(string propertyName)
+    {   //기본적인 이벤트핸들러 파라미터와 동일(Object sender, EventArgs e)
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));        
+    }
+
+    ```
+    - MainView.xaml에 연동
+    ```xml
+    <mah:MetroWindow 
+    xmlns:vm="clr-namespace:WpfBasicApp2.ViewModel"
+    DataContext="{DynamicResource MainVM}" >
+
+    <mah:MetroWindow.Resources>
+        <!--MainViewModel을 가져와서 사용하겠다.-->
+        <vm:MainViewModel x:Key="MainVM"/>
+    </mah:MetroWindow.Resources>
+
+
+    ```
+
+9. View-MainViewModel 연결(1) - MainViewModel에서 DB연동(divtbl데이터)하고 View(combobox장르 컨트롤)에서 데이터(장르)를 보여주기
+    - MainViewModel.cs 코드 
+        ```csharp
+        //groupbox의 combobox에 넣을 데이터 저장할 리스트
+        public ObservableCollection<KeyValuePair<string, string>> Divisions { get; set; }
+        ```
+       
+        ```csharp
+         //db연동코드
+        private void LoadControlFromDb()
+        {
+            string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+            string query = "SELECT Division,Names FROM divtbl";
+
+            ObservableCollection<KeyValuePair<string, string>> divisions = new ObservableCollection<KeyValuePair<string, string>>();
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        var division = reader.GetString("Division");
+                        var name = reader.GetString("Names");
+                        divisions.Add(new KeyValuePair<string, string>(division, name));
+                    }
+                }
+                catch (MySqlException ex)
+                {
+                }
+
+                Divisions = divisions;
+                OnPropertyChanged(nameof(Divisions));
+            }
+        }
+        ```
+    - View의 MainView.xaml
+    ```xml
+    <!--combobox에 바인딩-->
+    <ComboBox  ItemsSource="{Binding Divisions}">
+    ```
+
+10. View-MainViewModel 연결(2) - MainViewModel에서 DB연동(bookstbl데이터)하고 View(데이터그리드 컨트롤)에서 데이터를 보여주기
+    - MainViewModel.cs 코드
+    ```csharp
+    //datagrid에 넣을 데이터 저장할 리스트
+    public ObservableCollection<Book> Books { get; set; } 
+    ```
+    ```csharp
+    //db연동
+    // DATAGRID 컨트롤에 로드되는 데이터
+    private void LoadGridFromDb()
+    {
+        string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+        string query = "SELECT b.Idx,b.Author,b.Division ,b.Names, b.ReleaseDate,b.ISBN,b.Price, d.Names as dNames FROM bookstbl b, divtbl d WHERE b.Division = d.Division order by b.Idx";
+
+        ObservableCollection<Book> books = new ObservableCollection<Book>();
+
+        using (MySqlConnection conn = new MySqlConnection(connectionString))
+        {
+            try
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    books.Add(new Book
+                    {
+                        Idx = reader.GetInt32("Idx"),
+                        Division = reader.GetString("Division"),
+                        Author = reader.GetString("Author"),
+                        Names = reader.GetString("Names"),
+                        DNames = reader.GetString("DNames"),
+                        ISBN = reader.GetString("ISBN"),
+                        Price = reader.GetInt32("Price"),
+                        ReleaseDate= reader.GetDateTime("ReleaseDate")
+                    });
+                }
+            }
+            catch (MySqlException ex)
+            {
+            }
+            Books = books;
+            OnPropertyChanged(nameof (Books));
+        }
+    }
+
+    ```
+    - View의 MainView.xaml
+    ```xml
+    <!--datagrid에 바인딩--> 
+    <DataGrid  ItemsSource="{Binding Books}">
+
+    <!-- datagrid 태그 안 각각의 속성 바인딩--> 
+    <!--*주의할점: Books 속성에서 정의한 이름 그대로 써야함-->
+    <DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
+
+    ```
+
+11. View-MainViewModel 연결(3) - View(데이터그리드 컨트롤)에서 선택한 행의 데이터를  View(groupbox컨트롤)에 보여주기
+    - View의 MainView.xaml
+    ```xml
+    <!--datagrid에 선택아이템속성추가--> 
+    <DataGrid  ItemsSource="{Binding Books}" SelectedItem="{Binding SelectedBook , Mode=TwoWay}">
+
+    <!--groupbox의 각각의 컨트롤의 속성에 코드 추가--> 
+    <mah:NumericUpDown     Value="{Binding SelectedBook.Idx}"/>
+    <ComboBox SelectedValue="{Binding SelectedBook.Division}"></ComboBox>
+    <DatePicker SelectedDate="{Binding SelectedBook.ReleaseDate}"></DatePicker>
+
+    ```
+
+    - MainViewModel.cs 코드
+    ```csharp
+    //선택한 행 담을 변수
+
+    public Book _selectedBook;
+
+    public Book SelectedBook
+    {
+        //람다식 표현, get{ return _selectedBook; }와 동일
+        get => _selectedBook;
+        
+        set
+        {
+            _selectedBook = value;
+            //값이 변경된 것을 알아차리도록 해줘야함!!
+            OnPropertyChanged(nameof(SelectedBook));
+        }
+    }
+
+    ```
+    - `public Book Book { get; set; }는 멤버변수가 자동으로 정의된다.(public Book _book;)`
+    
+12. MainView.xmal 컨트롤에 바인딩 작업
+    - [전통적인 C# 방식](./day64/Day01Wpf/WpfBasicApp1/MainWindow.xaml) : x:Name사용(MainView.xaml.cs에서 사용필요) , 마우스이벤트 추가 
+    ```xml
+    <DataGrid x:Name="GrdBooks" Grid.Row="0" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="GrdBooks_MouseDoubleClick">
+    <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
+        <DataGridTextColumn Binding="{Binding Names}" Header="책제목"/>
+        <DataGridTextColumn Binding="{Binding ReleaseDate, StringFormat='yyyy-MM-dd'}" Header="출판일"/>
+        <DataGridTextColumn Binding="{Binding Author}" Header="저자"/>
+        <DataGridTextColumn Binding="{Binding Division}" Header="장르" Visibility="Hidden"/>
+        <DataGridTextColumn Binding="{Binding dNames}" Header="장르명" />
+        <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN"/>
+        <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
+    </DataGrid.Columns>
+    </DataGrid>
+    ```
+    - [WPF MVVM 바인딩 방식](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) : 전부 Binding 사용
+    ```xml
+    <DataGrid  Grid.Row="0" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding Books}" SelectedItem="{Binding SelectedBook , Mode=TwoWay}">
+     <DataGrid.Columns>
+         <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
+         <DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
+         <DataGridTextColumn Binding="{Binding Names}" Header="책제목"/>
+         <DataGridTextColumn Binding="{Binding ReleaseDate, StringFormat='yyyy-MM-dd'}" Header="출판일"/>
+         <DataGridTextColumn Binding="{Binding Author}" Header="저자" Visibility="Hidden"/>
+         <DataGridTextColumn Binding="{Binding Division}" Header="장르" Visibility="Hidden"/>
+         <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN" Visibility="Hidden"/>
+         <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
+     </DataGrid.Columns>
+ </DataGrid>
+    ```

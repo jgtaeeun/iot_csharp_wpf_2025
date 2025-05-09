@@ -1,0 +1,193 @@
+1.
+public Book Book { get; set; }는 멤버변수가 자동으로 정의된다.(public Book _book;)
+
+★ 2번부터 4번까지 하기 위해서
+- MainViewModel.cs 에 변화알림 이벤트
+ public event PropertyChangedEventHandler? PropertyChanged;
+
+ protected void OnPropertyChanged(string propertyName)
+ {   //기본적인 이벤트핸들러 파라미터와 동일(Object sender, EventArgs e)
+     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));        
+ }
+
+
+- MainView.xaml에 연동
+<mah:MetroWindow 
+xmlns:vm="clr-namespace:WpfBasicApp2.ViewModel"
+  DataContext="{DynamicResource MainVM}" >
+
+<mah:MetroWindow.Resources>
+    <!--MainViewModel을 가져와서 사용하겠다.-->
+    <vm:MainViewModel x:Key="MainVM"/>
+</mah:MetroWindow.Resources>
+
+- Model폴더내  Book.cs 정의
+  public class Book : INotifyPropertyChanged
+ {
+     public int Idx {  get; set; }
+     public string Names { get; set; }
+     public string Author {  get; set; }
+     public string Division {  get; set; }
+     public string DNames { get; set; }
+
+     public string ISBN {  get; set; }   
+     public int Price {  get; set; }
+
+     public DateTime ReleaseDate {  get; set; }
+     
+     //위의 여덟개의 값이 기존상태에서 변경이 되면 발생하는 이벤트
+     //사용자가 클릭같은 거로 발생하는 이벤트가 아님
+     public event PropertyChangedEventHandler? PropertyChanged;
+ }
+
+
+2. View-MainViewModel 연결(1)
+MainViewModel에서 DB연동(divtbl데이터)하고 
+View(combobox장르 컨트롤)에서 데이터(장르)를 보여주기
+
+2-1. MainViewModel
+-groupbox의 combobox에 넣을 데이터 저장할 리스트
+public ObservableCollection<KeyValuePair<string, string>> Divisions { get; set; }
+
+-db연동코드
+   private void LoadControlFromDb()
+   {
+       string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+       string query = "SELECT Division,Names FROM divtbl";
+
+       ObservableCollection<KeyValuePair<string, string>> divisions = new ObservableCollection<KeyValuePair<string, string>>();
+
+       using (MySqlConnection conn = new MySqlConnection(connectionString))
+       {
+           try
+           {
+               conn.Open();
+               MySqlCommand cmd = new MySqlCommand(query, conn);
+               MySqlDataReader reader = cmd.ExecuteReader();
+               while (reader.Read())
+               {
+                   var division = reader.GetString("Division");
+                   var name = reader.GetString("Names");
+                   divisions.Add(new KeyValuePair<string, string>(division, name));
+               }
+           }
+           catch (MySqlException ex)
+           {
+           }
+
+           Divisions = divisions;
+           OnPropertyChanged(nameof(Divisions));
+       }
+   }
+- 변화알림 이벤트
+ // PropertyChanged 이벤트는.NET의 INotifyPropertyChanged 인터페이스에서 사용되는 이벤트입니다.
+ public event PropertyChangedEventHandler? PropertyChanged;
+
+ //OnPropertyChanged는 이 이벤트를 발생시키는 도우미 메서드입니다.
+ protected void OnPropertyChanged(string propertyName)
+ {   //기본적인 이벤트핸들러 파라미터와 동일(Object sender, EventArgs e)
+     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));        
+ }
+
+2-2. View의 MainView.xaml
+-MainViewModel 연동
+  
+<mah:MetroWindow 
+xmlns:vm="clr-namespace:WpfBasicApp2.ViewModel"
+  DataContext="{DynamicResource MainVM}" >
+
+<mah:MetroWindow.Resources>
+    <!--MainViewModel을 가져와서 사용하겠다.-->
+    <vm:MainViewModel x:Key="MainVM"/>
+</mah:MetroWindow.Resources>
+
+-combobox에 바인딩
+ <ComboBox  ItemsSource="{Binding Divisions}">
+
+
+3. View-MainViewModel 연결(2)
+MainViewModel에서 DB연동(bookstbl데이터)하고 
+View(데이터그리드 컨트롤)에서 데이터를 보여주기
+
+3-1. MainViewModel
+- datagrid에 넣을 데이터 저장할 리스트
+ public ObservableCollection<Book> Books { get; set; } 
+
+
+- db연동
+  // DATAGRID 컨트롤에 로드되는 데이터
+  private void LoadGridFromDb()
+  {
+      string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+      string query = "SELECT b.Idx,b.Author,b.Division ,b.Names, b.ReleaseDate,b.ISBN,b.Price, d.Names as dNames FROM bookstbl b, divtbl d WHERE b.Division = d.Division order by b.Idx";
+
+      ObservableCollection<Book> books = new ObservableCollection<Book>();
+
+      using (MySqlConnection conn = new MySqlConnection(connectionString))
+      {
+          try
+          {
+              conn.Open();
+              MySqlCommand cmd = new MySqlCommand(query, conn);
+              MySqlDataReader reader = cmd.ExecuteReader();
+              while (reader.Read())
+              {
+                  books.Add(new Book
+                  {
+                      Idx = reader.GetInt32("Idx"),
+                      Division = reader.GetString("Division"),
+                      Author = reader.GetString("Author"),
+                      Names = reader.GetString("Names"),
+                      DNames = reader.GetString("DNames"),
+                      ISBN = reader.GetString("ISBN"),
+                      Price = reader.GetInt32("Price"),
+                      ReleaseDate= reader.GetDateTime("ReleaseDate")
+                  });
+              }
+          }
+          catch (MySqlException ex)
+          {
+          }
+          Books = books;
+          OnPropertyChanged(nameof (Books));
+      }
+  }
+
+
+3-2.View의 MainView.xaml
+- datagrid에 바인딩
+<DataGrid  ItemsSource="{Binding Books}">
+
+- datagrid 태그 안 각각의 속성 바인딩
+*주의할점: Books 속성에서 정의한 이름 그대로 써야함
+<DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
+
+4. View-MainViewModel 연결(3)
+View(데이터그리드 컨트롤)에서 선택한 행의 데이터를  View(groupbox컨트롤)에 보여주기
+
+4-1.View의 MainView.xaml
+- datagrid에 선택아이템속성추가
+ <DataGrid  ItemsSource="{Binding Books}" SelectedItem="{Binding SelectedBook , Mode=TwoWay}">
+
+- groupbox의 각각의 컨트롤의 속성에 코드 추가
+ <mah:NumericUpDown     Value="{Binding SelectedBook.Idx}"/>
+ <ComboBox SelectedValue="{Binding SelectedBook.Division}"></ComboBox>
+   <DatePicker SelectedDate="{Binding SelectedBook.ReleaseDate}"></DatePicker>
+
+4-2. MainViewModel
+- 선택한 행 담을 변수
+
+ public Book _selectedBook;
+
+ public Book SelectedBook
+ {
+     //람다식 표현, get{ return _selectedBook; }와 동일
+     get => _selectedBook;
+     
+     set
+     {
+         _selectedBook = value;
+         //값이 변경된 것을 알아차리도록 해줘야함!!
+         OnPropertyChanged(nameof(SelectedBook));
+     }
+ }
