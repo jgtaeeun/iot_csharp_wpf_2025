@@ -1,5 +1,9 @@
 ﻿using MahApps.Metro.Controls;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -7,13 +11,12 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WpfBasicApp2.View
+namespace WpfBasicApp02.Views
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// MainView.xaml에 대한 상호 작용 논리
     /// </summary>
     public partial class MainView : MetroWindow
     {
@@ -21,7 +24,5 @@ namespace WpfBasicApp2.View
         {
             InitializeComponent();
         }
-
-        //디자인적인 이벤트나 메서드는 추가되지만 개발자가 DB나 비즈니스로직 관련된 소스는 한줄도 안들어감
     }
 }

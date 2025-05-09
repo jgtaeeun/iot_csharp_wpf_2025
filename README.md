@@ -238,13 +238,13 @@ iot 개발자 wpf 학습
 2. WPF 바인딩 연습시 사용한 MainWindow.xaml의 UI 복사
 3. Model, View, ViewModel 폴더 생성
 4. MainWindow.xaml을 View로 이동
-5. App.xaml에서 StartupUri 수정
+5. ** App.xaml에서 StartupUri 수정**
     ```csharp
     StartupUri="/View/MainWindow.xaml"
     ```
 6. Model폴더 내 Book.cs 생성 [Book.cs](./day64/Day01Wpf/WpfBasicApp2/Model/Book.cs)
-    - INotifyPropertyChanged 인터페이스 : 객체내의 어떠한 속성값이 변경되면 상태를 C#에게 알려주는 기능
-    - PropertyChangedEventHandler 이벤트 생성
+    - **INotifyPropertyChanged 인터페이스 : 객체내의 어떠한 속성값이 변경되면 상태를 C#에게 알려주는 기능**
+    - **PropertyChangedEventHandler 이벤트 생성**
     ```csharp
         public class Book : INotifyPropertyChanged
         {
@@ -469,5 +469,324 @@ https://github.com/user-attachments/assets/42fa4f15-9cb1-43dc-a6b9-3c699bb0aa89
          <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN" Visibility="Hidden"/>
          <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
      </DataGrid.Columns>
- </DataGrid>
+    </DataGrid>
     ```
+### MVVM Framework
+- MVVM 개발자체가 어려움. 초기 개발시 MVVM 템풀릿을 만드는데 시간이 많이 소요. 난이도 있음
+- 조금 쉽게 개발하고자 3rd Party에서 MVVM 프레임워크 사용
+- 종류
+    - Prism : MS계열에서 직접 개발. 대규모 앱 개발시 사용. 모듈화 잘 되어있음. 커뮤니티 활발. 
+        - 진입장벽 높음
+    - **Caliburn.Micro** : 경량화된 프레임워크. 쉽게 개발할 수 있음. Xaml바인딩 생략가능. 커뮤니티 주는 추세.
+        - MahApps.Metro에서 사용 중
+        - 디버깅이 어려움
+    - MVVM Light Toolkit : 가장 가벼운 MVVM 입문용. 쉬운 Command 지원. 개발종료
+        - 확장성이 떨어짐
+
+    - CommunityTookit.Mvvm : MS공식 경량 MVVM. 단순, 빠름. 커뮤니티 등 매우 활발
+        - 모듈기능이 없음 
+    - ReactiveUI : Rx기반 MVVM. 비동기. 스트림처리 강력. 커뮤니티가 활발
+        - 진입장벽이 높음
+
+### Caliburn.Micro
+- [공식사이트](https://caliburnmicro.com/)
+- [Github](https://github.com/Caliburn-Micro/Caliburn.Micro)
+
+
+### Caliburn.Micro 학습 [Caliburn 학습](./day65/Day02Wpf/WpfBasicApp01/MainWindow.xaml)
+1. WPF 애플리케이션 프로젝트 생성 , Nuget패키지 관리자에서 Caliburn.Micro 설치
+2. App.xaml에서 StartupUri 삭제
+3. **Models, Views, ViewModels 폴더** 생성
+    - MainView.xaml, MainView.xaml.cs , MainViewModel.cs, Bootstrapper.cs 에서 네임스페이스 수정
+4. ViewModel폴더 내에 MainViewModel 클래스 생성
+    - MainView의 속하는 ViewModel은 반드시 MainViewModel라는 이름을 써야함
+    ```csharp
+    using Caliburn.Micro;
+
+    namespace WpfBasicApp01.ViewModel
+    {
+        public class MainViewModel : Conductor<object>
+        {
+
+        }
+    }
+    ```
+5. MainWindow.xaml를 View폴더 내로 이동 
+6. MainWindow.xaml를 MainView.xaml로 이름변경(F2)
+    ```xml
+    <!--MainView.xaml-->
+    <Window x:Class="WpfBasicApp01.View.MainView"
+        xmlns:local="clr-namespace:WpfBasicApp01.View">
+    ```
+    ```csharp
+    //MainView.xaml.cs
+    namespace WpfBasicApp01.View
+    {
+        
+        public partial class MainView : Window
+        {
+            public MainView()
+            {
+                InitializeComponent();
+            }
+        }
+    }
+    ```
+7. Bootstrapper 클래스 생성
+    ```csharp
+    using Caliburn.Micro;
+    using System.Windows;
+    using WpfBasicApp01.View;
+    using WpfBasicApp01.ViewModel;
+
+    namespace WpfBasicApp01
+    {
+        public class Bootstrapper : BootstrapperBase
+        {
+            public Bootstrapper() 
+            {
+                Initialize();
+            }
+
+            protected override void OnStartup(object sender, StartupEventArgs e)
+            {
+                //base.OnStartup(sender, e);
+
+                //App.xaml의 StartupUri와  동일한 일을 수행
+                //MainViewModel과 동일한 이름의 View를 찾아서 바인딩 후 실행
+                DisplayRootViewForAsync<MainViewModel>(); 
+            }
+        }
+    }
+
+
+    ```
+8. App.xaml에서 resource 추가
+```xml
+ <Application.Resources>
+     <ResourceDictionary>
+         <ResourceDictionary.MergedDictionaries>
+             <ResourceDictionary>
+                 <local:Bootstrapper x:Key="bootstrapper"/>
+             </ResourceDictionary>
+         </ResourceDictionary.MergedDictionaries>
+     </ResourceDictionary>
+ </Application.Resources>
+```
+9. 컨트롤 연습
+    ```xml
+    <!--MainView.xaml-->
+    <Label Content="{Binding Greeting}"  ></Label>
+    <Button Content="클릭" Width="100" Height="30" cal:Message.Attach="SayMyName"></Button>
+    ```
+    ```csharp
+    //MainViewModel.cs
+    public string _greeting;
+    public string Greeting 
+    
+    { get => _greeting;
+        set 
+        {
+            _greeting = value;
+            NotifyOfPropertyChange(() => Greeting);
+        }
+    
+    }
+
+    public MainViewModel() { Greeting = "Hello Caliburn Micro"; }
+    
+    public void SayMyName()
+    {
+        Greeting = "abcdefghijk";
+    }
+    ```
+    - <img src='./day65/caliburn컨트롤실행1.png' width=500>
+    - <img src='./day65/caliburn컨트롤실행2.png' width=500>
+
+10. MahApps.Metro UI 적용
+    - Nuget패키지관리자에서 MahApps.Metro 설치
+    - App.xaml에 리소스 추가
+    - MainView.xaml에 코드 추가
+    - MainView.xaml.cs에 코드 추가
+
+### Caliburn.Micro + MahApp.Metro + DB연동 [(디자인)](./day65/Day02Wpf/WpfBasicApp02/Views/MainView.xaml) [(소스코드)](./day65/Day02Wpf/WpfBasicApp02/ViewModels/MainViewModel.cs)
+1. WPF 애플리케이션 프로젝트 생성
+2. Nuget패키지에서 mahapps, mysql.data, caliburn 설치
+3. Models, Views, ViewModels 폴더 생성
+4. App.xaml 작성
+```xml
+<Application.Resources>
+    <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary>
+                <local:Bootstrapper x:Key="bootstrapper"/>
+            </ResourceDictionary>
+            <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
+            <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+            <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+
+
+            <!-- Theme setting -->
+            <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Pink.xaml" />
+        </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+</Application.Resources>
+```
+5. Models 폴더 내에 Book.cs 생성
+```csharp
+ public class Book 
+ {
+     public int Idx {  get; set; }
+     public string Names { get; set; }
+     public string Author {  get; set; }
+     public string Division {  get; set; }
+     public string DNames { get; set; }
+
+     public string ISBN {  get; set; }   
+     public int Price {  get; set; }
+
+     public DateTime ReleaseDate {  get; set; }
+   
+ }
+```
+6. Views 폴더 내에 MainView.xaml, MainView.xaml.cs 생성
+```xml
+<mah:MetroWindow x:Class="WpfBasicApp02.Views.MainView"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:iconpacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:cal="http://caliburnmicro.com"
+      >
+```
+```xml
+    <DataGrid  Grid.Row="0" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding Books}" SelectedItem="{Binding SelectedBook , Mode=TwoWay}" >
+        <DataGrid.Columns>
+            <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
+            <DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
+            <DataGridTextColumn Binding="{Binding Names}" Header="책제목"/>
+            <DataGridTextColumn Binding="{Binding ReleaseDate, StringFormat='yyyy-MM-dd'}" Header="출판일"/>
+            <DataGridTextColumn Binding="{Binding Author}" Header="저자" Visibility="Hidden"/>
+            <DataGridTextColumn Binding="{Binding Division}" Header="장르" Visibility="Hidden"/>
+            <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN" Visibility="Hidden"/>
+            <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
+        </DataGrid.Columns>
+    </DataGrid>
+    <GroupBox Grid.Row="0" Grid.Column="1" Margin="5" Header="상세">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <!--그룹박스 내 컨트롤-->
+            <mah:NumericUpDown  Grid.Row="0" Maximum="100" Minimum="0"  Margin="3"
+                   mah:TextBoxHelper.Watermark="순번"
+                   mah:TextBoxHelper.AutoWatermark="True"
+                   IsReadOnly="True"
+                   Value="{Binding SelectedBook.Idx}"/>
+            <ComboBox  Grid.Row="1" Margin="3"
+            mah:TextBoxHelper.Watermark="장르"
+            mah:TextBoxHelper.AutoWatermark="True"
+            DisplayMemberPath="Value"
+            SelectedValuePath="Key"
+            ItemsSource="{Binding Divisions}"
+            SelectedValue="{Binding SelectedBook.Division}"></ComboBox>
+            <TextBox  Grid.Row="2" Margin="3" mah:TextBoxHelper.Watermark="책제목" Text="{Binding SelectedBook.Names}"></TextBox>
+            <TextBox  Grid.Row="3" Margin="3" mah:TextBoxHelper.Watermark="책저자" Text="{Binding SelectedBook.Author}"></TextBox>
+            <TextBox  Grid.Row="4" Margin="3" mah:TextBoxHelper.Watermark="ISBN" Text="{Binding SelectedBook.ISBN}"></TextBox>
+            <DatePicker Grid.Row="5" Margin="3"  mah:TextBoxHelper.Watermark="출간일" SelectedDate="{Binding SelectedBook.ReleaseDate}"></DatePicker>
+            <TextBox  Grid.Row="6" Margin="3" mah:TextBoxHelper.Watermark="책가격" Text="{Binding SelectedBook.Price}"></TextBox>
+
+        </Grid>
+    </GroupBox>
+</Grid>
+```
+```csharp
+using MahApps.Metro.Controls;
+public partial class MainView : MetroWindow
+```
+7. ViewModels 폴더 내에 MainViewModel.cs 생성
+- NotifyOfPropertyChange(() => Divisions); 이와 같이 간단하게 변화를 알릴 수 있다.
+```csharp
+using Caliburn.Micro;
+using MahApps.Metro.Controls.Dialogs;
+using MySql.Data.MySqlClient;
+using System.Collections.ObjectModel;
+using System.Windows;
+using WpfBasicApp2.Models;
+
+namespace WpfBasicApp02.ViewModels
+{
+    class MainViewModel : Conductor<object>
+    {
+       
+
+        public MainViewModel()
+        {
+            LoadControlFromDb();
+            LoadGridFromDb();
+            DoAction();
+        }
+
+        //그룹박스의 콤보박스에 아이템 넣기 위해서
+        private void LoadControlFromDb()
+        {
+
+                Divisions = divisions;
+                NotifyOfPropertyChange(() => Divisions);
+        }
+        
+
+        // DATAGRID 컨트롤에 로드되는 데이터
+        private void LoadGridFromDb()
+        {
+            string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+           
+                Books = books;
+                NotifyOfPropertyChange(() => Books);
+
+            }
+        }
+
+        public  void DoAction()
+        {
+            MessageBox.Show("테스트");
+           
+        }
+    
+}
+
+```
+8. Bootstrapper.cs 생성
+```csharp
+using Caliburn.Micro;
+using System.Windows;
+using WpfBasicApp02.ViewModels;
+
+namespace WpfBasicApp02
+{
+    public class Bootstrapper : BootstrapperBase
+    {
+        public Bootstrapper() 
+        {
+            Initialize();
+        }
+
+        protected override void OnStartup(object sender, StartupEventArgs e)
+        {
+            DisplayRootViewForAsync<MainViewModel>();
+        }
+    }
+}
+
+```
+
+9. 실행결과
+<img src='./day65/caliburn과db연동.png'>
+
+
+
+## 66일차(5/12)
