@@ -233,7 +233,7 @@ iot 개발자 wpf 학습
     - 구조가 복잡. 디버깅이 어려움.
     - 스케일이 커짐
 
-### WPF MVVM 연습 [MVVM DB연동 디자인](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [MVVM DB연동 소스](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
+### WPF MVVM 연습 [(MVVM DB연동 디자인)](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [(MVVM DB연동 소스)](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
 1. 프로젝트 생성 , app.xaml, MainWindow.xaml, MainWindow.axml.cs 수정
 2. WPF 바인딩 연습시 사용한 MainWindow.xaml의 UI 복사
 3. Model, View, ViewModel 폴더 생성
@@ -270,7 +270,7 @@ iot 개발자 wpf 학습
     - PropertyChangedEventHandler 이벤트 생성
 
 ## 65일차(5/9)
-### WPF MVVM 연습 [MVVM DB연동 디자인](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [MVVM DB연동 소스](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
+### WPF MVVM 연습 [(MVVM DB연동 디자인)](./day64/Day01Wpf/WpfBasicApp2/View/MainView.xaml) [(MVVM DB연동 소스)](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)
 8. View와 ViewModel 연동 준비작업
     - MainViewModel.cs 에 변화알림 이벤트 
     ```csharp
@@ -434,8 +434,13 @@ iot 개발자 wpf 학습
 
     ```
     - `public Book Book { get; set; }는 멤버변수가 자동으로 정의된다.(public Book _book;)`
+12. 실행결과
     
-12. MainView.xmal 컨트롤에 바인딩 작업
+
+https://github.com/user-attachments/assets/42fa4f15-9cb1-43dc-a6b9-3c699bb0aa89
+
+
+13. MainView.xmal 컨트롤에 바인딩 작업
     - [전통적인 C# 방식](./day64/Day01Wpf/WpfBasicApp1/MainWindow.xaml) : x:Name사용(MainView.xaml.cs에서 사용필요) , 마우스이벤트 추가 
     ```xml
     <DataGrid x:Name="GrdBooks" Grid.Row="0" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="GrdBooks_MouseDoubleClick">
