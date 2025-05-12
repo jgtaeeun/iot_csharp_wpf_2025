@@ -1189,5 +1189,10 @@ public partial class App : Application
  }
 ```
 
+- 실행결과: 외래키 연결되어있는것은 삭제과정 중 에러남.
+  
+
+https://github.com/user-attachments/assets/fe96d571-f566-4859-aba5-e5f767f344ca
+
 
 9. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel)
