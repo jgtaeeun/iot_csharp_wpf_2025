@@ -483,8 +483,10 @@ https://github.com/user-attachments/assets/42fa4f15-9cb1-43dc-a6b9-3c699bb0aa89
     - MVVM Light Toolkit : 가장 가벼운 MVVM 입문용. 쉬운 Command 지원. 개발종료
         - 확장성이 떨어짐
 
-    - CommunityTookit.Mvvm : MS공식 경량 MVVM. 단순, 빠름. 커뮤니티 등 매우 활발
+    - **CommunityTookit.Mvvm** : MS공식 경량 MVVM. 단순, 빠름. 커뮤니티 등 매우 활발
         - 모듈기능이 없음 
+        - NotifyOfPropertyChange를 사용할 필요없음
+
     - ReactiveUI : Rx기반 MVVM. 비동기. 스트림처리 강력. 커뮤니티가 활발
         - 진입장벽이 높음
 
@@ -789,6 +791,7 @@ namespace WpfBasicApp02
 
 10. MahApps.Metro-DB연동-MVVM 정리
 - 2가지 방식 비교 요약 -차이는 변화알림 부분, 나머지는 바인딩이나 마하디자인은 동일
+
 |순서/방식|MahApps.Metro-DB연동-MVVM|MahApps.Metro-DB연동-MVVM+프레임 워크 Caliburn|
 |:--:|:--:|:--:|
 |1|WPF 애플리케이션 프로젝트 생성|WPF 애플리케이션 프로젝트 생성
@@ -802,3 +805,389 @@ namespace WpfBasicApp02
 |9|./day64/Day01Wpf/WpfBasicApp2[실습코드](./day64/Day01Wpf/WpfBasicApp2/ViewModel/MainViewModel.cs)|./day65/Day02Wpf/WpfBasicApp02[실습코드](./day65/Day02Wpf/WpfBasicApp02/ViewModels/MainViewModel.cs)|
 
 ## 66일차(5/12)
+### 프레임워크 CommunityTookit.Mvvm 학습 [MahApps.Metro-DB연동-MVVM + CommunityTookit.Mvvm](./day66/Day03Wpf/WpfBasicApp1/ViewModels/MainViewModel.cs)
+-  MahApps.Metro-DB연동-MVVM + CommunityTookit.Mvvm
+1. WPF 애플리케이션 프로젝트 생성
+2. Nuget패키지에서 mahapps, mysql.data , CommunityTookit.Mvvm 설치
+3. Models, Views, ViewModels 폴더 생성
+4. App.xaml 리소스 작성, App.xaml에서 StartupUri 삭제, App.xaml.cs에 startUp 이벤트 작성
+```csharp
+//App.xaml.cs
+using System.Windows;
+using WpfBasicApp1.ViewModels;
+using WpfBasicApp1.Views;
+
+public partial class App : Application
+{
+    private void Application_Startup(object sender, StartupEventArgs e)
+    {
+        var viewModel = new MainViewModel();
+        var view = new MainView
+        {
+            DataContext = viewModel,
+        };
+        view.ShowDialog();
+    }
+}
+```
+5. Models폴더 내 Book.cs 작성 
+```csharp
+ public class Book
+```
+6. View폴더 내 MainView.xaml작성(MahApps,UI,Binding),  MainView.xaml.cs 작성(MahApps.Metro)
+7. ViewModel폴더 내 MainViewModel.cs작성
+```csharp
+     public partial class MainViewModel : ObservableObject
+    {
+        #region communityToolkit 학습
+        //멤버변수1
+        private string _greeting;
+
+        //속성1
+        public string Greeting 
+        { get => _greeting; 
+            
+          set => SetProperty(ref _greeting, value); //CommunityToolkit.Mvvm의 핵심
+        }
+        #endregion
+      
+        #region 생성자
+        public MainViewModel()
+        {
+            // community프레임 학습-속성호출
+            _greeting = "MainViewModel 생성자호출ㅡCommunity Frame 학습";
+
+            //db연동
+            LoadControlFromDb();
+            LoadGridFromDb();
+        }
+        #endregion
+
+        #region db연동
+        private ObservableCollection<KeyValuePair<string, string>> _divisions;
+        public ObservableCollection<KeyValuePair<string, string>> Divisions 
+        { get=> _divisions;
+            set=>SetProperty(ref _divisions, value);
+        }
+
+        private ObservableCollection<Book> _book;
+        public ObservableCollection<Book> Books 
+        { 
+            get=> _book;
+            set => SetProperty(ref _book, value);
+        }
+      
+        private Book _selectedBook;
+        public Book SelectedBook
+        {
+            get => _selectedBook;
+            set => SetProperty(ref _selectedBook, value);
+        }
+
+        //그룹박스의 콤보박스에 아이템 넣기 위해서
+        private void LoadControlFromDb()
+        {
+            string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+            string query = "SELECT Division,Names FROM divtbl";
+
+            ObservableCollection<KeyValuePair<string, string>> divisions = new ObservableCollection<KeyValuePair<string, string>>();
+
+            //3. db연결, 명령, 리더
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        var division = reader.GetString("Division");
+                        var name = reader.GetString("Names");
+                        divisions.Add(new KeyValuePair<string, string>(division, name));
+
+                    }
+                }
+                catch (MySqlException ex)
+                {
+
+                }
+                Divisions = divisions;
+            }
+        }
+
+        // DATAGRID 컨트롤에 로드되는 데이터
+        private void LoadGridFromDb()
+        {
+            string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+            string query = "SELECT b.Idx,b.Author,b.Division ,b.Names, b.ReleaseDate,b.ISBN,b.Price, d.Names as dNames FROM bookstbl b, divtbl d WHERE b.Division = d.Division order by b.Idx";
+
+            ObservableCollection<Book> books = new ObservableCollection<Book>();
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        books.Add(new Book
+                        {
+                            Idx = reader.GetInt32("Idx"),
+                            Division = reader.GetString("Division"),
+                            Author = reader.GetString("Author"),
+                            Names = reader.GetString("Names"),
+                            DNames = reader.GetString("DNames"),
+                            ISBN = reader.GetString("ISBN"),
+                            Price = reader.GetInt32("Price"),
+                            ReleaseDate = reader.GetDateTime("ReleaseDate")
+                        });
+
+                    }
+                }
+                catch (MySqlException ex)
+                {
+                }
+                Books = books;
+            }
+        }
+        #endregion
+    }
+```
+8. 실행결과
+    - <img src='./day66/commnunity프레임워크,mahapps,db연동,mvvm.png'>
+
+9. 아이콘 추가
+    - 프로젝트명 오른쪽마우스- 속성 - 애플리케이션 - win32리소스- 아이콘 찾아보기- 확장자가 ico인 파일 넣기
+    - MainView.xaml
+    ```xml
+       <mah:MetroWindow.IconTemplate>
+       <DataTemplate>
+           <iconpacks:PackIconFileIcons Kind="_4d" Margin="10,7,0,0" Background="White"/>
+       </DataTemplate>
+   </mah:MetroWindow.IconTemplate>
+    ```
+    - <img src='./day66/아이콘.png'>
+    
+ ### Log 라이브러리
+ - 개발한 앱, 솔루션의 현재상태를 계속 모니터링하는 기능
+ - Log 사용법
+    - 직접 코딩 방식
+    - 로그 라이브러리 사용방식
+- Log 라이브러리  
+    - **NLog** : 가볍고 쉽다. 빠름. 데스크톱
+    - Serilog : 어려운 편. 빠름. 웹쪽
+    - Log4net : Java의 로그를 .NET으로 이전. 느림. 웹쪽
+    - ZLogger : 제일 최신(2021). 초고속. 게임서버
+
+
+### NLog 라이브러리 사용 [NLog.config](./day66/Day03Wpf/WpfBasicApp1/NLog.config) [로그호출](./day66/Day03Wpf/WpfBasicApp1/ViewModels/MainViewModel.cs)
+1. Nuget패키지관리자에서 NLog, NLog.Schema 설치
+2. 새항목>XML파일>NLog.config 생성 > **속성 출력디렉토리로 복사를  항상복사**
+3. NLog 로그 레벨 순서 (낮음 → 높음) Info < Debug < Warning < Error
+    - MainViewModel.cs에서 로그호출할려고 하니 Info, Warn, Error, Fatal은 출력되는데 Debug, Trace는 출력이 안됨.
+4. NLog.config 작성
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+	  xmlns:xsi ="http://www.w3.org/XMLSchema-instance">
+	<!--로그 저장위치 및 이름-->
+	<targets>
+		<target name="logfile" xsi:type="File" fileName="logs/app.log" 
+				layout="${longdate} ${level:uppercase=true} ${logger} ${message}"></target>
+		<target name="logconsole" xsi:type="Console"></target>
+	</targets>
+	
+	<!--어떤 로그를 쓸지-->
+	<rules>
+		<logger name ="*" minlevel ="Info"   writeTo="logfile,logconsole"/>
+	</rules>
+</nlog>
+```
+5. MainViewModel.cs에서 속성만들기
+```csharp
+ //Nlog 객체 생성
+ private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
+ public MainViewModel()
+{
+    //로그
+    _logger.Info("뷰모델 시작");
+}
+```
+
+6. C:\Source\iot_csharp_wpf_2025\day66\Day03Wpf\WpfBasicApp1\bin\Debug\net8.0-windows\logs 에 app.log파일 생성
+    - <img src='./day66/applog파일.png'>
+
+
+### MVVM , MahApps, communityToolkit , NLog , DB연동 + CRUD 실습 [BOOKSHOP](./day66/Day03Wpf/WpfBookRentalShop01/ViewModels/MainViewModel.cs)
+1. WPF 프로젝트 생성
+2. Nuget패키지 - NLog, Mysql, MahApps, CommunityTookit 설치
+3. Models, Views, ViewModels 폴더 생성
+4. App.xaml 리소스 작성, App.xaml에서 StartupUri 삭제, App.xaml.cs에 startUp 이벤트 작성
+5. Models폴더 내 Book.cs 작성 , Genre.cs 작성
+    ```csharp
+    private string _division;
+    private string _names;
+
+    public string Division 
+    {  get => _division;
+        set=>SetProperty(ref _division, value);
+    }
+    public string Name
+    {
+        get => _names;
+        set => SetProperty(ref _names, value);
+    }
+    ```
+6. View폴더 내 MainView.xaml작성(MahApps,UI,Binding),  MainView.xaml.cs 작성(MahApps.Metro)-**Binding과정 중요**
+```xml
+<Menu IsMainMenu="True" Style="{StaticResource MahApps.Styles.Menu}">
+    <MenuItem Header="종료" Command="{Binding AppExitCommand}">
+        <MenuItem.Icon>
+            <iconpacks:PackIconBoxIcons Kind="SolidExit"/>
+        </MenuItem.Icon>
+    </MenuItem>
+     <MenuItem Header="책장르관리" Command="{Binding ShowBookGenreCommand}">
+     <MenuItem.Icon>
+         <iconpacks:PackIconMaterialDesign Kind="Category"/>
+     </MenuItem.Icon>
+    </MenuItem>
+</Menu>
+```
+7. ViewModel폴더 내 MainViewModel.cs작성-**[RelayCommand], view, viewModel연결**
+    ```csharp
+    [RelayCommand]
+    public  void AppExit()
+    {
+        MessageBox.Show("종료합니다.");
+    }
+
+    [RelayCommand]
+    public void ShowBookGenre()
+    {
+        //MessageBox.Show("책장르 관리");
+        var vm = new BookGenreViewModel();
+        var v = new BookGenreView { DataContext = vm };
+        CurrentView = v;
+        CurrentStatus = "책장르 관리";
+    }
+
+    
+    ```
+8. 하위 사용자 컨트롤 작업(1)BookGenre(View, ViewModel)
+ ```xml
+ <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True"
+          ItemsSource="{Binding GenreList}"
+          SelectedItem="{Binding SelectedGenre, Mode=TwoWay}">
+    <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Division}" Header="장르코드"/>
+        <DataGridTextColumn Binding="{Binding Name}" Header="장르명"/>
+
+    </DataGrid.Columns>
+</DataGrid>
+ ```
+
+ ```csharp
+ //db연동
+  //db에서 읽어온 데이터 저장할 공간
+ private ObservableCollection<Genre> _genreList;
+
+  public ObservableCollection<Genre> GenreList
+  {
+      get => _genreList;
+      set =>SetProperty(ref _genreList, value);
+  }
+
+ private void LoadGridFromDb()
+ {
+  
+     string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+  
+     string query = "SELECT Division,Names FROM divtbl";
+     ObservableCollection<Genre> genres = new ObservableCollection<Genre>();
+
+     //3. db연결, 명령, 리더
+     using (MySqlConnection conn = new MySqlConnection(connectionString))
+     {
+         try
+         {
+             conn.Open();
+             MySqlCommand cmd = new MySqlCommand(query, conn);
+             MySqlDataReader reader = cmd.ExecuteReader();
+             while (reader.Read())
+             {
+                 var division = reader.GetString("Division");
+                 var name = reader.GetString("Names");
+                 genres.Add(new Genre { Division = division, Name = name });
+
+             }
+         }
+         catch (MySqlException ex)
+         {
+
+         }
+
+         GenreList = genres;
+
+     }
+ }
+ ```
+```csharp
+//버튼(초기화, 저장, 삭제)
+ [RelayCommand]
+ public void SetInit() 
+ {
+     _isUpdate = false;
+     SelectedGenre = null;
+ }
+
+ [RelayCommand]
+ public void DelData()
+ { 
+     if (_isUpdate == false)
+     {
+         MessageBox.Show("선택된 데이터가 없습니다.");
+         return;
+     }
+
+
+
+     string connectionString = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+
+     string query = "Delete  FROM divtbl where Division =@Division";
+     MessageBox.Show($"삭제 시도: Division = [{SelectedGenre.Division}]");
+
+     using (MySqlConnection conn = new MySqlConnection(connectionString))
+     {
+         try
+         {
+             conn.Open();
+             MySqlCommand cmd = new MySqlCommand(query, conn);
+             cmd.Parameters.AddWithValue("@Division", SelectedGenre.Division);
+             int resultCnt = cmd.ExecuteNonQuery();  //한 건 삭제하면 resultCnt=1, 안 지워지면 resultCnt=0
+
+             if (resultCnt> 0)
+             {
+                 MessageBox.Show("삭제 성공");
+                 LoadGridFromDb(); // 목록 갱신
+                 SetInit();        // 선택 초기화
+             }
+             else
+                 MessageBox.Show("삭제실패");
+         }
+         catch (MySqlException ex)
+         {
+             MessageBox.Show("DB 오류 발생: " + ex.Message);
+         }
+
+
+
+     }
+ }
+```
+
+
+9. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel)
