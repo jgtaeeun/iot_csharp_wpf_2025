@@ -33,7 +33,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>
-                <MenuItem Header="관리">
+                <MenuItem Header="관리" >
                     <MenuItem.Icon>
                         <iconpacks:PackIconMaterialDesign Kind="Category"/>
                     </MenuItem.Icon>
@@ -47,12 +47,12 @@
                             <iconpacks:PackIconMaterial Kind="BookOpenVariant"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="회원관리">
+                    <MenuItem Header="회원관리"  Command="{Binding ShowMemberCommand}">
                         <MenuItem.Icon>
                             <iconpacks:PackIconLucide Kind="BookCopy"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="대여관리">
+                    <MenuItem Header="대여관리"  Command="{Binding ShowRentalCommand}">
                         <MenuItem.Icon>
                             <iconpacks:PackIconMaterial Kind="BookClock"/>
                         </MenuItem.Icon>

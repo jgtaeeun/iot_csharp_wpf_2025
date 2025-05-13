@@ -19,12 +19,12 @@ namespace WpfBookRentalShop01.Views
     /// <summary>
     /// BooksView.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class BooksView : UserControl
+    public partial class RentalView : UserControl
     {
-        public BooksView()
+        public RentalView()
         {
             InitializeComponent();
-            this.DataContext = new BooksViewModel();  // 이 줄이 꼭 있어야 함
+            this.DataContext = new RentalViewModel();  // 이 줄이 꼭 있어야 함
         }
     }
 }

@@ -1209,7 +1209,7 @@ https://github.com/user-attachments/assets/fe96d571-f566-4859-aba5-e5f767f344ca
             Common.LOGGER.Info("초기화버튼");
         }
     ```
-- [X] 메뉴탭- 종료메뉴 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml , App.xaml.cs , MainView.xaml.cs 설정
+- [X] `메뉴탭- 종료메뉴 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml , App.xaml.cs , MainView.xaml.cs 설정`
 ```xml
 <!--MainView.xaml-->
 xmlns:Dialog ="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
@@ -1249,7 +1249,7 @@ Dialog:DialogParticipation.Register="{Binding}"
 https://github.com/user-attachments/assets/b011016f-0826-4100-b496-89a751a4c833
 
 
-- [X] 메뉴탭- 책장르관리 뷰- 저장버튼 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml.cs , BookGenreView.xaml, BookGenreView.xaml.cs (app.xaml.cs와 common.cs는 앞과정에서 한 거 그대로 씀)
+- [X] `메뉴탭- 책장르관리 뷰- 저장버튼 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml.cs , BookGenreView.xaml, BookGenreView.xaml.cs (app.xaml.cs와 common.cs는 앞과정에서 한 거 그대로 씀)`
 ```csharp
 //  MainView.xaml.cs
    [RelayCommand]
@@ -1355,9 +1355,77 @@ public async void SaveData()
 https://github.com/user-attachments/assets/48b63f18-f0e2-484f-9f82-453c9c20d825
 
 
-- [ ] DB 이전
-- [ ] 종료 메뉴 아이템
-10. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel) - BooksView.xaml, BooksViewModel.cs
-    - BooksView.xaml에 ui, 다이얼로그 관련 코드, 마하앱 코드 
-    - 
 
+10. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel) - BooksView.xaml, BooksViewModel.cs [CRUD 추가기능](./day67/Day04Wpf/WpfBookRentalShop01/ViewModels/BooksViewModel.cs)
+    - 아래 11과 과정 동일
+    - 주의할점 - comboBox에서  DisplayMemberPath="Value" SelectedValuePath="Key" 이기에 SelectedValue="{Binding SelectedBook.Division}"이어야 장르명이 화면에 표시됨
+    ```xml
+     <DataGrid.Columns>
+     <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
+     <DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
+     <DataGridTextColumn Binding="{Binding BNames}" Header="책제목"/>
+     <DataGridTextColumn Binding="{Binding ReleaseDate, StringFormat='yyyy-MM-dd'}" Header="출판일"/>
+     <DataGridTextColumn Binding="{Binding Author}" Header="저자" Visibility="Hidden"/>
+     <DataGridTextColumn Binding="{Binding Division}" Header="장르" Visibility="Hidden"/>
+     <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN" Visibility="Hidden"/>
+     <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
+    </DataGrid.Columns>
+
+    <ComboBox  Grid.Row="1" Margin="3"
+    mah:TextBoxHelper.Watermark="장르"
+    mah:TextBoxHelper.AutoWatermark="True"
+    ItemsSource="{Binding GenresList}"
+    DisplayMemberPath="Value"
+    SelectedValuePath="Key"
+    SelectedValue="{Binding SelectedBook.Division}"></ComboBox>   
+    ```
+11. 하위 사용자 컨트롤 작업(3)Member(View, ViewModel) -Member.xaml, Member.cs , MemberViewModel.cs , MainViewModel.cs [CRUD 추가기능](./day67/Day04Wpf/WpfBookRentalShop01/ViewModels/MemberViewModel.cs)
+     - Member.xaml에 ui, 다이얼로그 관련 코드, 마하앱 코드 
+     - Member.xaml.cs에 뷰 관련 코드 
+     ```csharp
+        public MemberView()
+        {
+            InitializeComponent();
+            this.DataContext = new MemberViewModel();  // 이 줄이 꼭 있어야 함
+        }
+     ```
+     - MemberViewModel.cs에 db저장변수, 콤보박스저장변수, 다이얼로그변수, 선택된 아이템 변수
+     - MemberViewModel.cs  생성자 2개 , MainViewModel코드 수정
+     ```csharp
+     // MemberViewModel.cs 
+    //디자인 타임에서도 사용할 수 있도록 기본 생성자 오버로드를 추가
+    public MemberViewModel() : this(DialogCoordinator.Instance) { }
+
+    public MemberViewModel(IDialogCoordinator coordinator)
+    {
+        this._dialogCoordinator = coordinator;
+        InitVariable();
+        LoadGridFromDb();
+        LoadComboFromDb();
+    }
+
+     ```
+     ```csharp
+     //MainViewModel.cs
+        [RelayCommand]
+        public void ShowMember()
+        {
+            var vm = new MemberViewModel(Common.DIALOGCOORDINATOR);
+            var v = new MemberView { DataContext = vm };
+            CurrentView = v;
+            CurrentStatus = "회원 관리";
+            Common.LOGGER.Info("회원 관리");
+        }
+     ```
+     - 초기화함수, 데이터로드함수, 콤보박스데이터로드 함수
+     - Member.cs 클래스
+     - Member.xaml에 바인딩
+     - 저장, 초기화, 삭제 버튼 함수 (CRUD)
+     - 메시지박스 대신 다이얼로그 - async, await
+
+
+12. 콤보박스 속성 
+    - <img src = './day67/콤보박스바인딩속성비교.png'>
+
+
+13. 실행결과

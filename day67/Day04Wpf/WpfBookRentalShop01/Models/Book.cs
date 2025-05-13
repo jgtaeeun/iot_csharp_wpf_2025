@@ -9,7 +9,7 @@ namespace WpfBookRentalShop01.Models
     public class Book
     {
         public int Idx { get; set; }
-        public string Names { get; set; }
+        public string BNames { get; set; }
         public string Author { get; set; }
         public string Division { get; set; }
         public string DNames { get; set; }

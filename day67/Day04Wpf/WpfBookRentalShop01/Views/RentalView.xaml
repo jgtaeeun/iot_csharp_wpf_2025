@@ -1,4 +1,4 @@
-﻿<UserControl   x:Class="WpfBookRentalShop01.Views.BooksView"
+﻿<UserControl   x:Class="WpfBookRentalShop01.Views.RentalView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -19,19 +19,19 @@
             <ColumnDefinition Width="6*"></ColumnDefinition>
             <ColumnDefinition Width="4*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Row="0" Grid.Column="0" FontSize="20" Text="책 관리" VerticalAlignment="Center"></TextBlock>
+        <TextBlock Grid.Row="0" Grid.Column="0" FontSize="20" Text="대출 관리" VerticalAlignment="Center"></TextBlock>
         <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True"
-               ItemsSource="{Binding BookList}"
-               SelectedItem="{Binding SelectedBook, Mode=TwoWay}">
+               ItemsSource="{Binding GenreList}"
+               SelectedItem="{Binding SelectedGenre, Mode=TwoWay}">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
-                <DataGridTextColumn Binding="{Binding DNames}" Header="장르명" />
-                <DataGridTextColumn Binding="{Binding BNames}" Header="책제목"/>
-                <DataGridTextColumn Binding="{Binding ReleaseDate, StringFormat='yyyy-MM-dd'}" Header="출판일"/>
-                <DataGridTextColumn Binding="{Binding Author}" Header="저자" Visibility="Hidden"/>
-                <DataGridTextColumn Binding="{Binding Division}" Header="장르" Visibility="Hidden"/>
-                <DataGridTextColumn Binding="{Binding ISBN}" Header="ISBN" Visibility="Hidden"/>
-                <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:N0}원}" Header="책가격"/>
+                <DataGridTextColumn Binding="{Binding MemberNames}" Header="회원명"  />
+                <DataGridTextColumn Binding="{Binding memberIdx}" Header="회원번호" Visibility="Hidden"/>
+                <DataGridTextColumn Binding="{Binding bookIdx}" Header="책번호" Visibility="Hidden"/>
+                <DataGridTextColumn Binding="{Binding Names}" Header="책번호"/>
+                <DataGridTextColumn Binding="{Binding rentalDate , StringFormat='yyyy-MM-dd'}" Header="대출일자"/>
+                <DataGridTextColumn Binding="{Binding returnDate , StringFormat='yyyy-MM-dd'}" Header="반납일자" />
+ 
             </DataGrid.Columns>
         </DataGrid>
         <GroupBox Grid.Row="1" Grid.Column="1" Margin="5" Header="상세">
@@ -43,11 +43,11 @@
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
+           
+                    
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
+                <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="초기화" Margin="5,5,5,0" Width="70" Style="{StaticResource MahApps.Styles.Button.MetroSquare}" Command="{Binding SetInitCommand}"></Button>
                     <Button Content="저장" Margin="0,5,5,0"  Width="70" Style="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}" Command="{Binding SaveDataCommand}"></Button>
                     <Button Content="삭제" Margin="0,5,5,0"  Width="70"  Style="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}" Background="Wheat" Command="{Binding  DelDataCommand}"></Button>
@@ -57,20 +57,17 @@
                 <mah:NumericUpDown  Grid.Row="0" Maximum="100" Minimum="0"  Margin="3"
                        mah:TextBoxHelper.Watermark="순번"
                        mah:TextBoxHelper.AutoWatermark="True"
-                       Value="{Binding SelectedBook.Idx}" IsReadOnly="True"
+                       IsReadOnly="True"
                        />
                 <ComboBox  Grid.Row="1" Margin="3"
-                    mah:TextBoxHelper.Watermark="장르"
+                    mah:TextBoxHelper.Watermark="회원번호"
                     mah:TextBoxHelper.AutoWatermark="True"
-                    ItemsSource="{Binding GenresList}"
                     DisplayMemberPath="Value"
-                    SelectedValuePath="Key"
-                    SelectedValue="{Binding SelectedBook.Division}"></ComboBox>     
-                <TextBox  Grid.Row="2" Margin="3" mah:TextBoxHelper.Watermark="책제목" Text="{Binding SelectedBook.BNames}"></TextBox>
-                <TextBox  Grid.Row="3" Margin="3" mah:TextBoxHelper.Watermark="책저자" Text="{Binding SelectedBook.Author}" ></TextBox>
-                <TextBox  Grid.Row="4" Margin="3" mah:TextBoxHelper.Watermark="ISBN" Text="{Binding SelectedBook.ISBN}" ></TextBox>
-                <DatePicker Grid.Row="5" Margin="3"  mah:TextBoxHelper.Watermark="출간일"   SelectedDate="{Binding SelectedBook.ReleaseDate, Mode=TwoWay}" ></DatePicker>
-                <TextBox  Grid.Row="6" Margin="3" mah:TextBoxHelper.Watermark="책가격" Text="{Binding SelectedBook.Price}"></TextBox>
+                    SelectedValuePath="Key"></ComboBox>     
+                <TextBox  Grid.Row="2" Margin="3" mah:TextBoxHelper.Watermark="책번호"></TextBox>
+                <TextBox  Grid.Row="3" Margin="3" mah:TextBoxHelper.Watermark="대여일자" ></TextBox>
+                <TextBox  Grid.Row="4" Margin="3" mah:TextBoxHelper.Watermark="반납일자" ></TextBox>
+          
 
 
             </Grid>

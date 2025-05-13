@@ -91,6 +91,27 @@ namespace WpfBookRentalShop01.ViewModels
             CurrentStatus = "책 관리";
             Common.LOGGER.Info("책 관리");
         }
+        [RelayCommand]
+        public void ShowMember()
+        {
+            var vm = new MemberViewModel(Common.DIALOGCOORDINATOR);
+            var v = new MemberView { DataContext = vm };
+            CurrentView = v;
+            CurrentStatus = "회원 관리";
+            Common.LOGGER.Info("회원 관리");
+        }
+
+        [RelayCommand]
+        public void ShowRental()
+        {
+            var vm = new RentalViewModel();
+            var v = new RentalView { DataContext = vm };
+            CurrentView = v;
+            CurrentStatus = "대출 관리";
+            Common.LOGGER.Info("대출 관리");
+        }
+        
+
     }
 
 }
