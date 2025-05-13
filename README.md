@@ -1077,7 +1077,7 @@ public partial class App : Application
 
     
     ```
-8. 하위 사용자 컨트롤 작업(1)BookGenre(View, ViewModel)
+8. 하위 사용자 컨트롤 작업(1)BookGenre(View, ViewModel) - DELETE
  ```xml
  <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True"
           ItemsSource="{Binding GenreList}"
@@ -1194,5 +1194,160 @@ public partial class App : Application
 
 https://github.com/user-attachments/assets/fe96d571-f566-4859-aba5-e5f767f344ca
 
+## 67일차(5/13)
+8. 하위 사용자 컨트롤 작업(1)BookGenre(View, ViewModel) - INSERT, UPDATE [CRUD 추가기능](./day67/Day04Wpf/WpfBookRentalShop01/ViewModels/BookGenreViewModel.cs)
+9. DB연결 CRUD 연습시 추가 필요사항
+- [X] 여러번 나오는 로직 메서도화 -InitVariable함수 만들어서 SetInit(),생성자에서 호출
+- [X] 공통화 작업, 연결문자열 Common으로 이전 - Helps폴더 내에 Common.cs 파일에서 자주사용하는 것들 정의(connectionString, NLog , Dialog)
+- [X] NLog로 각 기능 동작시 로그남기기 - NLog.config(xmal, 항상복사설정) , CS파일에서 NLog호출
+    ```csharp
+        [RelayCommand]
+        public void SetInit() 
+        {
 
-9. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel)
+            InitVariable();
+            Common.LOGGER.Info("초기화버튼");
+        }
+    ```
+- [X] 메뉴탭- 종료메뉴 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml , App.xaml.cs , MainView.xaml.cs 설정
+```xml
+<!--MainView.xaml-->
+xmlns:Dialog ="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+Dialog:DialogParticipation.Register="{Binding}"
+``` 
+```csharp
+// App.xaml.cs
+ Common.DIALOGCOORDINATOR = DialogCoordinator.Instance;
+ var viewModel = new MainViewModel(Common.DIALOGCOORDINATOR);
+```
+```csharp
+  // MainView.xaml.cs
+  private IDialogCoordinator _dialogCoordinator;
+
+  public MainViewModel(IDialogCoordinator coordinator)
+  {
+      this._dialogCoordinator = coordinator;
+  }
+
+  [RelayCommand]
+  public async Task AppExit()
+  {
+      var result = await this._dialogCoordinator.ShowMessageAsync(this, "종료확인", "종료하시겠습니까?", MessageDialogStyle.AffirmativeAndNegative);
+      if (result == MessageDialogResult.Affirmative) //종료 ok
+      {
+          Common.LOGGER.Info("종료");
+          Application.Current.Shutdown();  
+      }
+      else
+      {
+          return;
+      }
+  }
+```
+- [X] 메뉴탭- 책장르관리 뷰- 저장버튼 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml.cs , BookGenreView.xaml, BookGenreView.xaml.cs (app.xaml.cs와 common.cs는 앞과정에서 한 거 그대로 씀)
+```csharp
+//  MainView.xaml.cs
+   [RelayCommand]
+   public void ShowBookGenre()
+   {
+       //MessageBox.Show("책장르 관리");
+       var vm = new BookGenreViewModel(Common.DIALOGCOORDINATOR);
+       var v = new BookGenreView { DataContext = vm };
+       CurrentView = v;
+       CurrentStatus = "책장르 관리";
+       Common.LOGGER.Info("책장르 관리");
+   }
+```
+```xml
+<!--BookGenreView.xaml-->
+xmlns:Dialog ="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+Dialog:DialogParticipation.Register="{Binding}"
+```
+```csharp
+// BookGenreView.xaml.cs
+ // 메세지박스대신에 다이얼로그로 표현하기 위해서
+ private IDialogCoordinator _dialogCoordinator;
+
+  //디자인 타임에서도 사용할 수 있도록 기본 생성자 오버로드를 추가
+ public BookGenreViewModel() : this(DialogCoordinator.Instance) { }
+
+ public BookGenreViewModel(IDialogCoordinator coordinator)
+ {
+     this._dialogCoordinator = coordinator;
+     InitVariable();
+     LoadGridFromDb();
+ }
+
+[RelayCommand]
+public async void SaveData() 
+{
+
+    string query = string.Empty;
+
+    using (MySqlConnection conn = new MySqlConnection(Common.CONNSTR))
+    {
+        try
+        {
+            conn.Open();
+
+            //빈 데이터이 아닐 때, 새로 데이터 저장
+            if (_isUpdate == false && !string.IsNullOrWhiteSpace(SelectedGenre.Division)
+             && !string.IsNullOrWhiteSpace(SelectedGenre.Name))
+ 
+            {
+                query = "insert into divtbl values(@Division, @Name)";
+            }
+            else
+            {
+                query = "Update divtbl set Names = @Name where Division =@Division";
+            }
+            
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@Division", SelectedGenre.Division);
+            cmd.Parameters.AddWithValue("@Name", SelectedGenre.Name);
+            var resultCnt = cmd.ExecuteNonQuery();  //한 건 삭제하면 resultCnt=1, 안 지워지면 resultCnt=0
+
+            if (resultCnt > 0)
+            {
+                //MessageBox.Show("저장 성공");
+                await this._dialogCoordinator.ShowMessageAsync(this, "저장 관리", "저장 성공");
+                Common.LOGGER.Info("저장버튼-저장 성공");
+                LoadGridFromDb(); // 목록 갱신
+                SetInit();        // 선택 초기화
+            }
+            else
+            {
+                //MessageBox.Show("저장 실패");
+                await this._dialogCoordinator.ShowMessageAsync(this, "저장 관리", "저장 실패");
+                Common.LOGGER.Info("저장버튼-저장 실패");
+            }
+                
+        }
+        catch (MySqlException ex)
+        {
+            // MessageBox.Show("DB 오류 발생: " + ex.Message);
+            await this._dialogCoordinator.ShowMessageAsync(this, "저장 관리", $"DB 오류 발생:{ex.Message}");
+            Common.LOGGER.Info($"저장버튼-DB 오류 발생{ex.Message}");
+        }
+    }
+}
+```
+
+- [X] 삭제여부 메시지박스 추가 - BookGenre.xaml.cs에 삭제함수 코드 추가
+```csharp
+  var result = await this._dialogCoordinator.ShowMessageAsync(this, "삭제 전 확인", "삭제하시겠습니까?", MessageDialogStyle.AffirmativeAndNegative);
+  if (result == MessageDialogResult.Affirmative) //삭제  ok
+  {
+      Common.LOGGER.Info("삭제동의완료");
+  }
+  else
+  {
+      return;
+  }
+```
+- [ ] DB 이전
+- [ ] 종료 메뉴 아이템
+10. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel) - BooksView.xaml, BooksViewModel.cs
+    - BooksView.xaml에 ui, 다이얼로그 관련 코드, 마하앱 코드 
+    - 
+
