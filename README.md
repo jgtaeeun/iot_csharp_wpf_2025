@@ -1350,6 +1350,11 @@ public async void SaveData()
       return;
   }
 ```
+
+
+https://github.com/user-attachments/assets/48b63f18-f0e2-484f-9f82-453c9c20d825
+
+
 - [ ] DB 이전
 - [ ] 종료 메뉴 아이템
 10. 하위 사용자 컨트롤 작업(2)Books(View, ViewModel) - BooksView.xaml, BooksViewModel.cs
