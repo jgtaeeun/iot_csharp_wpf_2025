@@ -1429,3 +1429,8 @@ https://github.com/user-attachments/assets/48b63f18-f0e2-484f-9f82-453c9c20d825
 
 
 13. 실행결과
+    
+
+https://github.com/user-attachments/assets/d36d719e-49d9-4977-bfc2-29885e7e8f30
+
+
