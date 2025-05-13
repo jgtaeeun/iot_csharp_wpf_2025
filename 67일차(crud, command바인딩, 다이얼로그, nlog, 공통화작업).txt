@@ -1,0 +1,129 @@
+1. CRUD 쿼리, DB연동
+
+2. NLog
+2-1.nuget패키지 관리자에서 설치
+
+2-2.nlog.config xml파일 생성 및 속성-출력디렉토리복사- 항상복사
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+	  xmlns:xsi ="http://www.w3.org/XMLSchema-instance">
+	<!--로그 저장위치 및 이름-->
+	<targets>
+		<target name="logfile" xsi:type="File" fileName="logs/app.log"
+				layout="${longdate} ${level:uppercase=true} ${logger} ${message}"></target>
+		<target name="logconsole" xsi:type="Console"></target>
+	</targets>
+
+	<!--어떤 로그를 쓸지-->
+	<rules>
+		<logger name ="*" minlevel ="Info"   writeTo="logfile,logconsole"/>
+	</rules>
+</nlog>
+
+2-3.공통클래스 하나 만들어서 선언
+   public class Common
+   {
+       //NLog 인스턴스
+       public static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();  
+}
+
+
+2-4.cs파일에서 호출
+Common.LOGGER.Info("회원 관리");
+
+
+3. 다이얼로그
+3-1. 공통클래스에서 선언
+3-2. app.xaml.cs에서 선언
+ private void Application_Startup(object sender, StartupEventArgs e)
+ {
+     Common.DIALOGCOORDINATOR = DialogCoordinator.Instance;
+     var viewModel = new MainViewModel(Common.DIALOGCOORDINATOR);
+     var view = new MainView
+     {
+         DataContext = viewModel,
+     };
+     view.ShowDialog();
+ }
+
+
+3-3. MainView.xaml , BookView.xaml에서 선언 
+xmlns:Dialog ="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+Dialog:DialogParticipation.Register="{Binding}">
+
+3-4.MainViewModel.cs  에서  호출 및 선언  
+
+        // 메세지박스대신에 다이얼로그로 표현하기 위해서
+        private IDialogCoordinator _dialogCoordinator;
+
+        public MainViewModel(IDialogCoordinator coordinator)
+        {
+            this._dialogCoordinator = coordinator;
+          }
+
+[RelayCommand]
+public void ShowBooks()
+{
+    //MessageBox.Show("책 관리");
+    var vm = new BooksViewModel(Common.DIALOGCOORDINATOR);
+    var v = new BooksView { DataContext = vm };
+    CurrentView = v;
+    CurrentStatus = "책 관리";
+    Common.LOGGER.Info("책 관리");
+}
+
+3-5.  BookViewModel.cs  에서   선언 및 호출
+
+        // 메세지박스대신에 다이얼로그로 표현하기 위해서
+        private IDialogCoordinator _dialogCoordinator;
+
+        //디자인 타임에서도 사용할 수 있도록 기본 생성자 오버로드를 추가
+        public BooksViewModel() : this(DialogCoordinator.Instance) { }
+
+        public BooksViewModel(IDialogCoordinator coordinator)
+        {   this._dialogCoordinator = coordinator;
+            InitVariable();
+            LoadGridFromDb();
+            LoadComboFromDb();
+        }
+
+
+
+ public async void DelData()
+ {
+ await this._dialogCoordinator.ShowMessageAsync(this, "삭제 관리", "선택된 데이터가 없습니다.");
+}
+
+3-6. xaml.cs파일
+ this.DataContext = new BooksViewModel();  // 이 줄이 꼭 있어야 함
+
+4. 공통화 작업
+Helpers폴더 내 Common.cs만들기
+주로 nlog, connectionString 등 여러번 쓰이는 거 선언
+
+ public class Common
+ {
+     //NLog 인스턴스
+     public static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();  
+
+     //DB연결 connectString
+     public static readonly string CONNSTR = "Server=localhost;Database=madang;Uid=root;Pwd=12345;Charset=utf8";
+
+     //MahApps.Metro 다이얼로그 코디네이터
+     public static  IDialogCoordinator DIALOGCOORDINATOR;
+ }
+
+
+5. 바인딩
+mainviewmodel.xmal에서 <command = {Binding ShowMembercommand}>
+
+mainviewmodel.cs에서 
+   [RelayCommand]
+   public void ShowMember()
+   {
+       var vm = new MemberViewModel(Common.DIALOGCOORDINATOR);
+       var v = new MemberView { DataContext = vm };
+       CurrentView = v;
+       CurrentStatus = "회원 관리";
+       Common.LOGGER.Info("회원 관리");
+   }
