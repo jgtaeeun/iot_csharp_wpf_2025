@@ -1244,6 +1244,11 @@ Dialog:DialogParticipation.Register="{Binding}"
       }
   }
 ```
+
+
+https://github.com/user-attachments/assets/b011016f-0826-4100-b496-89a751a4c833
+
+
 - [X] 메뉴탭- 책장르관리 뷰- 저장버튼 다이얼로그 MahApps.Metro 메시지형태로 변경 - MainView.xaml.cs , BookGenreView.xaml, BookGenreView.xaml.cs (app.xaml.cs와 common.cs는 앞과정에서 한 거 그대로 씀)
 ```csharp
 //  MainView.xaml.cs
