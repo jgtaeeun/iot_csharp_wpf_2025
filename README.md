@@ -1436,6 +1436,12 @@ https://github.com/user-attachments/assets/d36d719e-49d9-4977-bfc2-29885e7e8f30
 
 ## 68일차(5/14)
 14. 하위 사용자 컨트롤 작업(3)Rental(View, ViewModel) [(대여관리View)](./day67/Day04Wpf/WpfBookRentalShop01/Views/RentalView.xaml)  [(대여관리ViewModel)](./day67/Day04Wpf/WpfBookRentalShop01/ViewModels/RentalViewModel.cs)
+- 실행결과
+  
+
+https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
+
+
 ### 영화즐겨찾기 앱 WITH  openAPI + Youtube API [API연동 앱](./day68/Day05Wpf/MovieFinder2025)
 - 기능
     - TMDB 사이트에서 제공하는 openAPI로 데이터 가져오기
