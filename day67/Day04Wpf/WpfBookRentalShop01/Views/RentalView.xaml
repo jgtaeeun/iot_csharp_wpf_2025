@@ -21,16 +21,16 @@
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" FontSize="20" Text="대출 관리" VerticalAlignment="Center"></TextBlock>
         <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" AutoGenerateColumns="False" IsReadOnly="True"
-               ItemsSource="{Binding GenreList}"
-               SelectedItem="{Binding SelectedGenre, Mode=TwoWay}">
+               ItemsSource="{Binding RentalList}"
+               SelectedItem="{Binding SelectedRental, Mode=TwoWay}">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Idx}" Header="순번"/>
-                <DataGridTextColumn Binding="{Binding MemberNames}" Header="회원명"  />
-                <DataGridTextColumn Binding="{Binding memberIdx}" Header="회원번호" Visibility="Hidden"/>
-                <DataGridTextColumn Binding="{Binding bookIdx}" Header="책번호" Visibility="Hidden"/>
-                <DataGridTextColumn Binding="{Binding Names}" Header="책번호"/>
-                <DataGridTextColumn Binding="{Binding rentalDate , StringFormat='yyyy-MM-dd'}" Header="대출일자"/>
-                <DataGridTextColumn Binding="{Binding returnDate , StringFormat='yyyy-MM-dd'}" Header="반납일자" />
+                <DataGridTextColumn Binding="{Binding MNames}" Header="회원명"   Visibility="Hidden"/>
+                <DataGridTextColumn Binding="{Binding MemberIdx}" Header="회원번호"/>
+                <DataGridTextColumn Binding="{Binding BookIdx}" Header="책번호" />
+                <DataGridTextColumn Binding="{Binding BNames}" Header="책제목" Visibility="Hidden"/>
+                <DataGridTextColumn Binding="{Binding RentalDate , StringFormat='yyyy-MM-dd'}" Header="대출일자"/>
+                <DataGridTextColumn Binding="{Binding ReturnDate , StringFormat='yyyy-MM-dd'}" Header="반납일자" />
  
             </DataGrid.Columns>
         </DataGrid>
@@ -58,15 +58,25 @@
                        mah:TextBoxHelper.Watermark="순번"
                        mah:TextBoxHelper.AutoWatermark="True"
                        IsReadOnly="True"
+                       Value="{Binding SelectedRental.Idx}"
                        />
                 <ComboBox  Grid.Row="1" Margin="3"
-                    mah:TextBoxHelper.Watermark="회원번호"
+                    mah:TextBoxHelper.Watermark="회원명"
                     mah:TextBoxHelper.AutoWatermark="True"
                     DisplayMemberPath="Value"
-                    SelectedValuePath="Key"></ComboBox>     
-                <TextBox  Grid.Row="2" Margin="3" mah:TextBoxHelper.Watermark="책번호"></TextBox>
-                <TextBox  Grid.Row="3" Margin="3" mah:TextBoxHelper.Watermark="대여일자" ></TextBox>
-                <TextBox  Grid.Row="4" Margin="3" mah:TextBoxHelper.Watermark="반납일자" ></TextBox>
+                    SelectedValuePath="Key"
+                    ItemsSource="{Binding  MemberList}"
+                    SelectedValue="{Binding SelectedRental.MemberIdx}"></ComboBox>
+                <ComboBox  Grid.Row="2" Margin="3"
+                           mah:TextBoxHelper.Watermark="책제목"
+                           mah:TextBoxHelper.AutoWatermark="True"
+                           DisplayMemberPath="Value"
+                           SelectedValuePath="Key"
+                           ItemsSource="{Binding  BookList}"
+                           SelectedValue="{Binding SelectedRental.BookIdx }"></ComboBox>
+           
+                <TextBox  Grid.Row="3" Margin="3" mah:TextBoxHelper.Watermark="대여일자"  Text="{Binding  SelectedRental.RentalDate, StringFormat='yyyy-MM-dd'}"></TextBox>
+                <TextBox  Grid.Row="4" Margin="3" mah:TextBoxHelper.Watermark="반납일자"  Text="{Binding  SelectedRental.ReturnDate ,StringFormat='yyyy-MM-dd'}"></TextBox>
           
 
 

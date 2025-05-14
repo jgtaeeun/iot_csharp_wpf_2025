@@ -1435,5 +1435,222 @@ https://github.com/user-attachments/assets/d36d719e-49d9-4977-bfc2-29885e7e8f30
 
 
 ## 68일차(5/14)
-### 영화즐겨찾기 앱
-- openAPI + Youtube API
+14. 하위 사용자 컨트롤 작업(3)Rental(View, ViewModel) [(대여관리View)](./day67/Day04Wpf/WpfBookRentalShop01/Views/RentalView.xaml)  [(대여관리ViewModel)](./day67/Day04Wpf/WpfBookRentalShop01/ViewModels/RentalViewModel.cs)
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API [API연동 앱](./day68/Day05Wpf/MovieFinder2025)
+- 기능
+    - TMDB 사이트에서 제공하는 openAPI로 데이터 가져오기
+    - 내가 좋아하는 영화리스트 선택, 즐겨찾기 저장
+    - 저장한 영화만 리스트업
+    - 선택된 영화목록 더블클릭> 영화 상세정보 팝업
+    - 선택된 영화 선택 > 예고편 보기 > 유튜브 동영상 팝업
+
+1. TMDB, Youtube API 준비
+    - TMDB API 신청 [TMDB공식사이트](https://www.themoviedb.org/)  [참고사이트](https://0lrlokr.tistory.com/16)
+    - Youtube Data API 신청  [구글 api](https://console.cloud.google.com/)
+        - 프로젝트 생성
+        - 목록 -API 및 서비스 - 라이브러리- Youtube Data API v3 - 사용 
+
+2. WPF 애플리케이션 프로젝트 생성 및 Nuget패키지 라이브러리 설치(MahApp. communityToolkit. NLog. MySQL)   
+3. 폴더 생성(Helps, Views, ViewModels, Models) 
+4. App.xaml에서 startUp넣기, StartupUri 지우기 , 리소스 넣기
+5. App.xaml.cs에서 startUp함수 정의
+6. [NLog](./day68/Day05Wpf/MovieFinder2025/NLog.config) NLog.Config xml파일(항상복사) , Common.cs에 NLog인스턴스 선언
+7. [공통화작업](./day68/Day05Wpf/MovieFinder2025/Helpers/Common.cs) Common.cs에 connectionString, Dialog 선언
+8. [다이얼로그] MoviesView.xaml에 다이얼로그관련 코드 2개 추가 + MoviesViewModel.cs에 다이얼로그 관련 변수 및 생성자 추가 + App.xaml.cs에 다이얼로그 관련 코드 추가
+9. [아이콘] MoviesView.xaml에 MahApps.iconpacks , 프로젝트명-속성-Window32 아이콘 찾아보기
+10. [MahApps.Metro] MoviesView.xaml에 마하 관련 코드 2개 추가 , 태그 수정 + MoviesView.xaml.cs에 MetroWindow import
+11. [디자인](./day68/Day05Wpf/MovieFinder2025/Views/MoviesView.xaml)
+    - 상태바
+    ```xml
+    <!--상태바 영역-->
+    <StatusBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" >
+        <StatusBarItem Content="TMDB &amp; Youtube API App"  Margin="10,0"/>
+        <Separator Style="{StaticResource MahApps.Styles.Separator.StatusBar}"/>
+        <StatusBarItem Content="{Binding}"/>
+        <StatusBarItem Content="2025-05-14 오후 12:12:24" HorizontalAlignment="Right" Margin="0,0,10,0" />
+    </StatusBar>
+    ```
+    - 이미지 속성-Source에 파일 첨부, stretch를 Fill로
+    ```xml
+    <Image Margin="10" Source="/Views/nopicture.png" Stretch="Fill" />
+    ```
+    - <img src='./day68/이미지태그속성.png'>
+    
+- <img src ='./day68/ui디자인.png' width = 600>
+
+12. [API 연동](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) TMDB API 구현
+    - api호출해서 가져올 데이터를 담을 클래스 MovieItem.cs( 베테랑1 영화정보) , MovieSearchResponse.cs(동일한 영화명 여러 시즌일 때, 베테랑1, 베테랑2) 작성
+    - MoviesViewModel.cs에서 api호출해서 데이터가져오는 함수 구현
+    ```csharp
+      //영화데이터 
+    private ObservableCollection<MovieItem> _movieItems;
+    public ObservableCollection<MovieItem> MovieItems
+    {
+        get => _movieItems;
+        set => SetProperty(ref _movieItems, value);
+    }
+
+    private async void SearchMovie(string movieName)
+    {
+        string tmdb_apikey = "api키 입력하기";
+        string encoding_moviename = HttpUtility.UrlEncode(movieName, Encoding.UTF8);  //입력한 한글을 UTF-8로 변경
+        string openApiUri = $"https://api.themoviedb.org/3/search/movie?api_key={tmdb_apikey}" +
+                            $"&language=ko-KR&page=1&include_adult=false&query={encoding_moviename}";
+
+        string result = string.Empty;
+
+        string result = string.Empty;
+
+   
+        HttpClient client = new HttpClient();
+    
+        ObservableCollection<MovieItem> movieItems = new ObservableCollection<MovieItem>(); 
+        try
+        {
+            var response = await client.GetFromJsonAsync<MovieSearchResponse>(openApiUri);
+
+            foreach (var movie in response.Results)
+            {
+                Common.LOGGER.Info(movie.Title);
+                movieItems.Add(movie);
+            }
+        
+        }
+        catch (Exception ex)
+        {
+            await this._dialogCoordinator.ShowMessageAsync(this, "예외", ex.Message);
+            Common.LOGGER.Fatal(ex.Message);
+        }
+        MovieItems = movieItems;
+    }
+    ```
+    - MoviesView.xmal에서 바인딩
+    ```xml
+     <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" IsReadOnly="True"  AutoGenerateColumns="False"
+           ItemsSource="{Binding MovieItems}"
+           SelectedItem="{Binding SelectedMovieItem, Mode=TwoWay}"
+           Style="{StaticResource MahApps.Styles.DataGrid.Azure}">
+     <DataGrid.Columns>
+ 
+         <DataGridTextColumn Header="한글제목" FontWeight="Bold" Binding="{Binding Title}"></DataGridTextColumn>
+    ```
+    - <img src='./day68/클래스가2개인이유.png'>
+12. [URI](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) 포스터 
+    - 선택한 영화(SelectdMovieItem)이 있을 때, 영화포스터 보이도록
+    - nopicture.png는 프로젝트폴더에 넣기
+    - MoviesView.xaml 바인딩
+    ```xml
+    <Image Margin="10" Source="{Binding PosterUri}" Stretch="Fill" />
+    ```
+
+    - MoviesViewModel.cs 구현 
+        
+    ```csharp
+    //포스터 변수
+    private string _baseurl = "https://image.tmdb.org/t/p/w300_and_h450_bestv2";
+
+    private Uri _posterUri;
+    public Uri PosterUri 
+    {
+        get=> _posterUri;
+        set => SetProperty(ref _posterUri, value);
+    }
+
+    //기본 포스터 화면
+    public MoviesViewModel(IDialogCoordinator coordinator) 
+    {
+        this._dialogCoordinator = coordinator;
+        PosterUri = new Uri("/nopicture.png" , uriKind: UriKind.RelativeOrAbsolute);
+    }
+    //선택된 영화일 때 포스터 화면
+   public MovieItem SelectedMovieItem
+   {
+       get => _selectedMovieItem;
+       set 
+       {
+           SetProperty(ref _selectedMovieItem, value);
+           Common.LOGGER.Info($"SelectedMovieItem: {value.Poster_path}");
+           PosterUri = new Uri($"{_baseurl}{value.Poster_path}", uriKind: UriKind.RelativeOrAbsolute);
+       }
+
+   }
+    ```
+13. [기능 디테일](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
+    - 숫자 오른쪽 정렬
+    ```xml
+    <DataGridTextColumn Header="평점" Binding="{Binding Vote_average , StringFormat=F2}">
+    ```
+    - enter키로 영화검색
+    ```xml
+    <TextBox Grid.Column="0" Margin="5,10" FontSize="14"
+          mah:TextBoxHelper.Watermark="검색할 영화이름 입력"
+          mah:TextBoxHelper.AutoWatermark="True"
+          mah:TextBoxHelper.UseFloatingWatermark="True"
+          mah:TextBoxHelper.ClearTextButton="True"
+          Text="{Binding MovieName , UpdateSourceTrigger=PropertyChanged}">
+     <TextBox.InputBindings>
+         <KeyBinding Key="Return" Command="{Binding SearchMovieCommand}"/>
+     </TextBox.InputBindings>
+    </TextBox>
+
+    ```
+    - 영화검색 textbox에 포커스 +영화검색 언어 다양화
+    ```xml
+    <!--MovieView.xaml-->
+    <mah:MetroWindow x:Class="MovieFinder2025.Views.MoviesView"
+        FocusManager.FocusedElement="{Binding ElementName=TxtSearchMovie}">
+
+    <!--검색 영역-->
+    <Grid Grid.Row="0" Grid.Column="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="1*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <TextBox x:Name="TxtSearchMovie" Grid.Column="0" Margin="5,10" FontSize="14"
+          InputMethod.PreferredImeState="On"
+          InputMethod.PreferredImeConversionMode="Native" />
+    ```
+    - <img src='./day68/영어입력검색.png'>
+
+14. [상세보기기능](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) 데이터그리드 더블클릭해서 영화정보 상세보기
+    - communityToolkit에서는 지원하지 않음
+    - `Nuget패키지관리자에서 Microsoft.Xaml.Behaviors.Wpf 설치`
+    - MovieView.xml에서 datagrid 밑에 코드 추가
+    ```xml
+    <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" IsReadOnly="True"  AutoGenerateColumns="False"
+          ItemsSource="{Binding MovieItems}"
+          SelectedItem="{Binding SelectedMovieItem, Mode=TwoWay}"
+          Style="{StaticResource MahApps.Styles.DataGrid.Azure}">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseDoubleClick">
+            <i:InvokeCommandAction Command ="{Binding MovieItemDoubleClickCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    ```
+    - MoviesViewModel.cs에서 바인딩 정의
+    ```csharp
+     [RelayCommand]
+    public async Task MovieItemDoubleClick() 
+    {
+        var currentMovie = SelectedMovieItem;
+
+        if (currentMovie != null)
+        {
+            StringBuilder sb= new StringBuilder();
+            sb.Append(currentMovie.Original_title + "(" + currentMovie.Release_date.ToString("yyyy-MM-dd") + ")" + Environment.NewLine + Environment.NewLine);
+            sb.Append($"평점 ★ {currentMovie.Vote_average.ToString("F2")}\r\n\r\n");
+            sb.Append(currentMovie.Overview);
+            await this._dialogCoordinator.ShowMessageAsync(this, currentMovie.Title, sb.ToString());
+        }
+    }
+    ```
+    
+## 69일차(5/15)
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API 
+15. 기능 디테일
+    - 오른쪽 하단 시계
+    - 상태바에 검색결과 건수 표시
+
+16. 즐겨찾기 버튼
+
+17. 예고편 보기 버튼

@@ -104,7 +104,7 @@ namespace WpfBookRentalShop01.ViewModels
         [RelayCommand]
         public void ShowRental()
         {
-            var vm = new RentalViewModel();
+            var vm = new RentalViewModel(Common.DIALOGCOORDINATOR);
             var v = new RentalView { DataContext = vm };
             CurrentView = v;
             CurrentStatus = "대출 관리";
