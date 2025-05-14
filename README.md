@@ -1569,17 +1569,17 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
         PosterUri = new Uri("/nopicture.png" , uriKind: UriKind.RelativeOrAbsolute);
     }
     //선택된 영화일 때 포스터 화면
-   public MovieItem SelectedMovieItem
-   {
-       get => _selectedMovieItem;
-       set 
-       {
-           SetProperty(ref _selectedMovieItem, value);
-           Common.LOGGER.Info($"SelectedMovieItem: {value.Poster_path}");
-           PosterUri = new Uri($"{_baseurl}{value.Poster_path}", uriKind: UriKind.RelativeOrAbsolute);
-       }
+    public MovieItem SelectedMovieItem
+    {
+        get => _selectedMovieItem;
+        set 
+        {
+            SetProperty(ref _selectedMovieItem, value);
+            Common.LOGGER.Info($"SelectedMovieItem: {value.Poster_path}");
+            PosterUri = new Uri($"{_baseurl}{value.Poster_path}", uriKind: UriKind.RelativeOrAbsolute);
+        }
 
-   }
+    }
     ```
 13. [기능 디테일](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
     - 숫자 오른쪽 정렬
@@ -1616,7 +1616,7 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
           InputMethod.PreferredImeState="On"
           InputMethod.PreferredImeConversionMode="Native" />
     ```
-    - <img src='./day68/영어입력검색.png'>
+    - <img src='./day68/영어입력검색.png' width=600>
 
 14. [상세보기기능](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) 데이터그리드 더블클릭해서 영화정보 상세보기
     - communityToolkit에서는 지원하지 않음
