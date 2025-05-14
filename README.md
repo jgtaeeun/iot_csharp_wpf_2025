@@ -1650,7 +1650,12 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
         }
     }
     ```
-    
+- 실행결과
+
+
+https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
+
+
 ## 69일차(5/15)
 ### 영화즐겨찾기 앱 WITH  openAPI + Youtube API 
 15. 기능 디테일
