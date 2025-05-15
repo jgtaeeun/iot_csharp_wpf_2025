@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using MahApps.Metro.Controls.Dialogs;
 using MovieFinder2025.Helpers;
 using MovieFinder2025.Models;
+using MovieFinder2025.Views;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace MovieFinder2025.ViewModels
@@ -410,7 +412,18 @@ namespace MovieFinder2025.ViewModels
                 return;
             }
 
-            await this._dialogCoordinator.ShowMessageAsync(this, "예고편 보기", "유튜브 api 연결준비");
+            var movieTitle = SelectedMovieItem.Title;
+            //MessageBox.Show(movieTitle);
+
+            //예고편은 새 창에서 보이도록 하기 위해서 
+            var viewModel = new TrailerViewModel(Common.DIALOGCOORDINATOR , movieTitle);
+            
+            var view = new TrailerView
+            { 
+                DataContext = viewModel,
+            };
+           
+            view.ShowDialog();
 
         }
 

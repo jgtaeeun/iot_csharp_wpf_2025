@@ -1661,7 +1661,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
 ## 69일차(5/15)
 ### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [(API 연동 앱 디자인)](./day69/Day06Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
 15. 기능 디테일
-    - 오른쪽 하단 시계
+    1. 오른쪽 하단 시계
     ```xml
     <StatusBarItem Content="{Binding CurrDateTime}" HorizontalAlignment="Right" Margin="0,0,10,0" />
     ```
@@ -1689,7 +1689,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
         _timer.Start();
     }
     ```
-    - 상태바에 검색결과 건수 표시
+    2. 상태바에 검색결과 건수 표시
     ```xml
     <StatusBarItem Content="{Binding SearchResult}"/>
     ```
@@ -1725,7 +1725,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
     }
 
     ```
-    - nlog.config 수정 -날짜별로 로그파일 생성하도록
+    3. nlog.config 수정 -날짜별로 로그파일 생성하도록
     ```xml
     <?xml version="1.0" encoding="utf-8" ?>
     <nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
@@ -1748,8 +1748,8 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
     </nlog>
     ```
 16. 즐겨찾기 버튼 [즐겨찾기 버튼의 db연동 코드](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
-    - db에서 moviefinder스키마, movieItems테이블(movieItems.cs 속성과 동일한 컬럼) 만들기
-    - 즐겨찾기 추가 버튼 
+    1. db에서 moviefinder스키마, movieItems테이블(movieItems.cs 속성과 동일한 컬럼) 만들기
+    2. 즐겨찾기 추가 버튼 
     ```xml
     <Button Command="{Binding AddMovieInfoCommand}">
     ```
@@ -1776,7 +1776,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
         //  -------------db에 넣는 insert 쿼리 과정 
     }
     ```
-    - 즐겨찾기 보기 버튼
+    2. 즐겨찾기 보기 버튼
     ```xml
     <Button Command="{Binding ViewMovieInfoCommand}">
     ```
@@ -1823,7 +1823,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
 
     }
     ```
-    - 즐겨찾기 삭제 버튼
+    3. 즐겨찾기 삭제 버튼
     ```xml
     <Button Command="{Binding DelMovieInfoCommand}">
     ```
@@ -1900,4 +1900,192 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
 
     ```
     - <img src='./day69/예외처리-개봉일미정인영화.png'>
-18. 예고편 보기 버튼
+18. 예고편 보기 버튼 [(예고편 뷰)](./day69/Day06Wpf/MovieFinder2025/Views/TrailerView.xaml) [(예고편 뷰모델)](./day69/Day06Wpf/MovieFinder2025/ViewModels/TrailerViewModel.cs)
+    1. TrailerView.xaml , TrailerViewModel.cs 생성 + 마하, 다이얼로그 코드 작성 + ui디자인
+    2. 웹 컨트롤 환경세팅
+        - WPF 기본 WebBrower는 HTML5 기술이 표현이 안됨. 오류가 많음
+        - Nuget패키지관리자에서 CefSharp.Wpf.NETCore 설치
+        - 프로젝트명-오른쪽마우스-속성-빌드-일반-플랫폼대상 x64로
+        - 솔루션명-오른쪽마우스-속성-구성관리자-활성솔루션 플랫폼 x64로 저장
+    - 웹컨트롤 준비
+    ```xml
+    xmlns:cefsharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+    ```
+    - 웹컨트롤 테스트
+    ```xml
+    <cefsharp:ChromiumWebBrowser Address="https://www.naver.com"/>
+    ```
+
+    3. 영화제목을 MovieViewModel.cs -> TrailerViewModel.cs로 전달
+    ```csharp
+    //MoiveViewModel.cs
+     [RelayCommand]
+    public async Task ViewMovieTrailer()
+    {
+        var movieTitle = SelectedMovieItem.Title;
+       
+        //예고편은 새 창에서 보이도록 하기 위해서 
+        var viewModel = new TrailerViewModel(Common.DIALOGCOORDINATOR , movieTitle);
+        var view = new TrailerView
+        { 
+            DataContext = viewModel,
+        };
+        view.ShowDialog();
+    }
+
+    ```
+    ```xml
+    //TrailerView.xaml
+     <Label  Content="{Binding MovieTitle}" />
+    ```
+
+    ```csharp
+    //TarilerViewModel.cs
+    private string _movieTitle;
+    public string MovieTitle
+    {
+        get => _movieTitle;
+        set => SetProperty(ref _movieTitle, value);
+    }
+
+    public TrailerViewModel(IDialogCoordinator coordinator , string mvm )
+    {
+        this._dialogCoordinator = coordinator;
+        MovieTitle = mvm;   
+    }
+    ```
+    4. YouTube api로 받는 데이터 클래스 YoutubeItem.cs 생성
+    5. Youtube api 환경 세팅 + youtube api 요청 응답 + 예고편 url
+        - Nuget패키지관리자에서 Google.Apis.YouTube.v3 설치
+        ```xml
+        <!--TrailerView.xaml-->
+        <ListView Grid.Row="1" Grid.Column="0" Margin="5" ItemsSource="{Binding YoutubeItems}" SelectedItem="{Binding SelectedYoutube}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command ="{Binding TrailerDoubleClickCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+                    <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="썸네일" Width="100">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Image Stretch="Fill" Source="{Binding Thumbanil}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="타이틀" Width="auto" DisplayMemberBinding="{Binding Title}"></GridViewColumn>
+                            </GridView>
+                    </ListView.View>
+        </ListView>
+
+        <Grid Grid.Row="1" Grid.Column="1"  Margin="10">
+            <cefsharp:ChromiumWebBrowser Address="{Binding YoutubeUri}"/>
+        </Grid>
+        ```
+
+        ```csharp
+        //TrailerViewModel.cs
+        //유튜브API에서 가져온 정보들
+        private ObservableCollection<YoutubeItem> _youtubeItems;
+        public ObservableCollection<YoutubeItem>  YoutubeItems
+        {
+            get => _youtubeItems;
+            set => SetProperty(ref _youtubeItems, value);
+        }
+
+
+          public TrailerViewModel(IDialogCoordinator coordinator , string mvm )
+        {
+            
+            MovieTitle = mvm;
+
+            //초기화면은 유튜브 처음페이지
+            YoutubeUri = "https:www.youtube.com";
+            
+            //YoutubeApi로 예고편 찾는 함수
+            SearchYoutubeApi();
+            
+        }
+
+        private async void SearchYoutubeApi()
+        {
+            await LoadDataCollection();
+        }
+
+        private async Task LoadDataCollection()
+        {
+            var servie = new YouTubeService(
+                new BaseClientService.Initializer()
+                {
+                    ApiKey = "AIzaSyC-ry_xG-vRtUqqP7PRWFk5HsJeYA0yrhw",
+                    ApplicationName = this.GetType().ToString()
+                });
+            var req = servie.Search.List("snippet");
+            req.Q = $"{MovieTitle} 예고편 공식";  //영화이름으로 api 검색
+            req.Order = SearchResource.ListRequest.OrderEnum.Relevance;
+            req.Type = "video";
+            req.MaxResults = 10;
+
+            var res = await req.ExecuteAsync(); //api실행결과를 리턴(비동기)
+
+       
+            //임시저장변수
+            ObservableCollection<YoutubeItem> temp = new ObservableCollection<YoutubeItem>();
+            foreach ( var item in res.Items )
+            {
+                temp.Add( new YoutubeItem
+                {
+                    Title = item.Snippet.Title,
+                    ChannelTitle = item.Snippet.ChannelTitle,
+                    URL = $"https://www.youtube.com/watch?v={item.Id.VideoId}",
+                    Author = item.Snippet.ChannelId,
+                    Thumbanil = new BitmapImage(new Uri(item.Snippet.Thumbnails.Default__.Url, UriKind.RelativeOrAbsolute))  
+                }
+                );
+            }
+
+            YoutubeItems = temp;
+            
+        }
+       ```
+
+
+       ```csharp
+        //유튜브 예고편 목록 중 선택한 것
+        private YoutubeItem _selectedYoutube;
+        public YoutubeItem SelectedYoutube
+        {
+            get => _selectedYoutube;
+            set => SetProperty(ref _selectedYoutube, value);
+        }
+
+        // 선택한 영화 uri 예고편을 보여줌
+        private string _youtubeUri;
+        public string YoutubeUri
+        {
+            get => _youtubeUri;
+            set => SetProperty(ref _youtubeUri, value);
+        }
+
+
+        public TrailerViewModel(IDialogCoordinator coordinator , string mvm )
+        {
+            
+            MovieTitle = mvm;
+
+            //초기화면은 유튜브 처음페이지
+            YoutubeUri = "https:www.youtube.com";
+            
+            //YoutubeApi로 예고편 찾는 함수
+            SearchYoutubeApi();
+            
+        }
+
+        [RelayCommand]
+        public  async Task TrailerDoubleClick()
+        {
+            YoutubeUri = SelectedYoutube.URL;
+        }
+        ```
+      
