@@ -1442,7 +1442,7 @@ https://github.com/user-attachments/assets/d36d719e-49d9-4977-bfc2-29885e7e8f30
 https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
 
 
-### 영화즐겨찾기 앱 WITH  openAPI + Youtube API [API연동 앱](./day68/Day05Wpf/MovieFinder2025)
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API [(API 연동 앱 디자인)](./day68/Day05Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
 - 기능
     - TMDB 사이트에서 제공하는 openAPI로 데이터 가져오기
     - 내가 좋아하는 영화리스트 선택, 즐겨찾기 저장
@@ -1623,6 +1623,8 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
     - `Nuget패키지관리자에서 Microsoft.Xaml.Behaviors.Wpf 설치`
     - MovieView.xml에서 datagrid 밑에 코드 추가
     ```xml
+    <mah:MetroWindow xmlns:i="http://schemas.microsoft.com/xaml/behaviors" >
+
     <DataGrid Grid.Row="1" Grid.Column="0" Margin="5" IsReadOnly="True"  AutoGenerateColumns="False"
           ItemsSource="{Binding MovieItems}"
           SelectedItem="{Binding SelectedMovieItem, Mode=TwoWay}"
@@ -1652,11 +1654,245 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
     ```
     
 ## 69일차(5/15)
-### 영화즐겨찾기 앱 WITH  openAPI + Youtube API 
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [(API 연동 앱 디자인)](./day69/Day06Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
 15. 기능 디테일
     - 오른쪽 하단 시계
+    ```xml
+    <StatusBarItem Content="{Binding CurrDateTime}" HorizontalAlignment="Right" Margin="0,0,10,0" />
+    ```
+
+    ```csharp
+    // 상태바 현재시간
+    private readonly DispatcherTimer _timer;
+    private string _currDateTime;
+    public string CurrDateTime
+    {
+        get => _currDateTime;
+        set => SetProperty(ref _currDateTime, value);
+    }
+
+    public MoviesViewModel(IDialogCoordinator coordinator) 
+    {
+        //상태바 시계
+        CurrDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");   //최초 화면 시계
+        _timer = new DispatcherTimer();
+        _timer.Interval = TimeSpan.FromSeconds(1);
+        _timer.Tick += (sender, e) =>
+        {
+            CurrDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); 
+        };
+        _timer.Start();
+    }
+    ```
     - 상태바에 검색결과 건수 표시
+    ```xml
+    <StatusBarItem Content="{Binding SearchResult}"/>
+    ```
 
-16. 즐겨찾기 버튼
+    ```csharp
+    //검색건수
 
-17. 예고편 보기 버튼
+    private string _searchResult;
+    public string SearchResult
+    {
+        get => _searchResult;
+        set => SetProperty(ref _searchResult, value);
+    }
+
+    private async void SearchMovie(string movieName)
+    {
+       try{
+            foreach (var movie in response.Results)
+            {
+                Common.LOGGER.Info(movie.Title);
+                movieItems.Add(movie);
+            }
+            SearchResult = $"영화검색 건수 {response.Total_results}건" ;
+            Common.LOGGER.Info(SearchResult + "검색완료!!");
+        }
+        catch (Exception ex)
+        {
+            await this._dialogCoordinator.ShowMessageAsync(this, "예외", ex.Message);
+            Common.LOGGER.Fatal(ex.Message);
+            SearchResult = $"오류발생";
+        }
+        MovieItems = movieItems;
+    }
+
+    ```
+    - nlog.config 수정 -날짜별로 로그파일 생성하도록
+    ```xml
+    <?xml version="1.0" encoding="utf-8" ?>
+    <nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+        xmlns:xsi ="http://www.w3.org/XMLSchema-instance">
+        <!--로그 저장위치 및 이름-->
+
+
+        <targets>
+            <target name="file" xsi:type="File" fileName="logs/app_${date:format=yyyyMMdd}.log"
+                    layout="[${date}] [TID:${threadid}] [${level:uppercase=true}] ${message}"></target>
+            <target name="console" xsi:type="ColoredConsole"
+                    layout="[${date}] [TID:${threadid}] [${level:uppercase=true}] ${message}"></target>
+        </targets>
+
+        <!--어떤 로그를 쓸지-->
+        <rules>
+            <logger name ="*" minlevel ="Info"   writeTo="file"/>
+            <logger name ="*" minlevel ="Info"   writeTo="console"/>
+        </rules>
+    </nlog>
+    ```
+16. 즐겨찾기 버튼 [즐겨찾기 버튼의 db연동 코드](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
+    - db에서 moviefinder스키마, movieItems테이블(movieItems.cs 속성과 동일한 컬럼) 만들기
+    - 즐겨찾기 추가 버튼 
+    ```xml
+    <Button Command="{Binding AddMovieInfoCommand}">
+    ```
+    ```csharp
+     // 즐겨찾기 리스트인지 아닌지
+    private bool _isFavoriteList = false;
+
+     [RelayCommand]
+    public async Task AddMovieInfo()
+    {
+        if (SelectedMovieItem == null|| _isFavoriteList == true)
+        {
+            if (_isFavoriteList)
+            {
+                await this._dialogCoordinator.ShowMessageAsync(this, "즐겨찾기 추가", "현재 즐겨찾기 리스트를 보고 있습니다.");
+            }
+            else
+            {
+                await this._dialogCoordinator.ShowMessageAsync(this, "즐겨찾기 추가", "선택한 영화가 없습니다");
+            }
+                
+            return;
+        }
+        //  -------------db에 넣는 insert 쿼리 과정 
+    }
+    ```
+    - 즐겨찾기 보기 버튼
+    ```xml
+    <Button Command="{Binding ViewMovieInfoCommand}">
+    ```
+
+    ```csharp
+    [RelayCommand]
+    public async Task ViewMovieInfo()
+    {
+        MovieName = "";   //즐겨찾기 보기 버튼 클릭 시 검색창에 입력한 영화제목 지우기
+
+        //검색창에서 즐겨찾기 온 경우
+        if (_isFavoriteList ==false)
+        {   //데이터 가져오는 동안 로딩화면을 다이얼로그로 
+            var controller = await _dialogCoordinator.ShowProgressAsync(this, "즐겨찾기 보기", "데이터 가져오는 중...");
+            controller.SetIndeterminate();
+            ViewMovieInfoDetail();
+            await Task.Delay(1000);
+            await controller.CloseAsync();
+        }
+        //즐겨찾기 창에서 즐겨찾기 온 경우 , 그대로 유지
+    }
+
+    private async void ViewMovieInfoDetail()
+    {
+        // -------------db에서 즐겨찾기 목록 가져오는 select문
+        MovieItems = movieList;
+
+        //현재 즐겨찾기 페이지임을 가리키는 변수
+        _isFavoriteList = true;
+
+      
+        //즐겨찾기가 있을 때, 포스터 이미지는 인덱스 0번째꺼로
+        if (movieList.Count > 0)
+        {
+            SelectedMovieItem = movieList[0];
+        }
+        else
+        {  //즐겨찾기가 없을 때, 포스터 이미지
+             PosterUri = new Uri("/nopicture.png", uriKind: UriKind.RelativeOrAbsolute);
+        }
+
+        SearchResult = $"즐겨찾기검색 건수 {movieList.Count}건";
+        Common.LOGGER.Info(SearchResult + "검색완료!!");
+
+    }
+    ```
+    - 즐겨찾기 삭제 버튼
+    ```xml
+    <Button Command="{Binding DelMovieInfoCommand}">
+    ```
+    ```csharp
+    if (SelectedMovieItem == null )
+    {
+        await this._dialogCoordinator.ShowMessageAsync(this, "즐겨찾기 삭제", "선택한 영화가 없습니다");
+        return;
+    }
+
+    if ( _isFavoriteList == false)
+    {
+        await this._dialogCoordinator.ShowMessageAsync(this, "즐겨찾기 삭제", "현재 즐겨찾기 리스트가 아닙니다.");
+        return;
+    }
+
+    // -------------db에 있는 즐겨찾기 선택한 거 삭제하는 delete문
+
+    //삭제 후 업데이트 된 즐겨찾기 보기위해서  
+    ViewMovieInfoDetail();
+    ```
+17. 검색창에 영화이름 입력시 Release_date가 빈문자열이라서 예외가 발생하는 문제 - 범죄도시, 베테랑 등이 이 예외를 겪음
+    - the JSON value could not be converted to system.nullable 에러는 release_date 필드가 JSON에서 빈 문자열 ""로 제공되었을 때 발생하는 문제입니다.
+    - 이는 DateTime? (nullable DateTime) 필드에 빈 문자열을 DateTime으로 변환하려 할 때 발생합니다.
+
+    - 커스텀 JsonConverter 작성
+    ```csharp
+    //SafeDateTimeConverter.cs
+    public class SafeDateTimeConverter : JsonConverter<DateTime?>
+    {
+        public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                var str = reader.GetString();
+                if (string.IsNullOrWhiteSpace(str))
+                    return null;  // 빈 문자열은 null로 처리
+
+                if (DateTime.TryParse(str, out var date))
+                    return date;  // 유효한 날짜 문자열을 DateTime으로 변환
+
+                return null;  // 날짜 형식이 잘못된 경우 null 반환
+            }
+
+            return null;  // 다른 타입의 경우 null 반환
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
+        {
+            if (value.HasValue)
+                writer.WriteStringValue(value.Value.ToString("yyyy-MM-dd"));
+            else
+                writer.WriteNullValue();  // null 값은 "null"로 출력
+        }
+    }
+    ```
+
+
+    - MovieItem 클래스에서 커스텀 JsonConverter 적용
+    ```csharp
+    //MovieItem.cs
+    [JsonConverter(typeof(SafeDateTimeConverter))]  // 커스텀 변환기 사용
+    public DateTime? Release_date { get => _release_date; set => SetProperty(ref _release_date, value); }
+    ```
+
+    ```csharp
+    //MoviesViewModel.cs
+    foreach (var movie in response.Results)
+    {
+        Common.LOGGER.Info(movie.Title);
+        movie.Release_date = movie.Release_date ?? new DateTime(0001, 1, 1);
+        movieItems.Add(movie);
+    }
+
+    ```
+    - <img src='./day69/예외처리-개봉일미정인영화.png'>
+18. 예고편 보기 버튼
