@@ -1442,7 +1442,8 @@ https://github.com/user-attachments/assets/d36d719e-49d9-4977-bfc2-29885e7e8f30
 https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
 
 
-### 영화즐겨찾기 앱 WITH  openAPI + Youtube API [(API 연동 앱 디자인)](./day68/Day05Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [iot_wpf_2025_api repository-\day69\Day06Wpf\MovieFinder2025\Views\MovieViewModel]
+15. 기능 디테일
 - 기능
     - TMDB 사이트에서 제공하는 openAPI로 데이터 가져오기
     - 내가 좋아하는 영화리스트 선택, 즐겨찾기 저장
@@ -1460,12 +1461,12 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
 3. 폴더 생성(Helps, Views, ViewModels, Models) 
 4. App.xaml에서 startUp넣기, StartupUri 지우기 , 리소스 넣기
 5. App.xaml.cs에서 startUp함수 정의
-6. [NLog](./day68/Day05Wpf/MovieFinder2025/NLog.config) NLog.Config xml파일(항상복사) , Common.cs에 NLog인스턴스 선언
-7. [공통화작업](./day68/Day05Wpf/MovieFinder2025/Helpers/Common.cs) Common.cs에 connectionString, Dialog 선언
-8. [다이얼로그] MoviesView.xaml에 다이얼로그관련 코드 2개 추가 + MoviesViewModel.cs에 다이얼로그 관련 변수 및 생성자 추가 + App.xaml.cs에 다이얼로그 관련 코드 추가
-9. [아이콘] MoviesView.xaml에 MahApps.iconpacks , 프로젝트명-속성-Window32 아이콘 찾아보기
-10. [MahApps.Metro] MoviesView.xaml에 마하 관련 코드 2개 추가 , 태그 수정 + MoviesView.xaml.cs에 MetroWindow import
-11. [디자인](./day68/Day05Wpf/MovieFinder2025/Views/MoviesView.xaml)
+6. NLog- NLog.Config xml파일(항상복사) , Common.cs에 NLog인스턴스 선언
+7. 공통화작업- Common.cs에 connectionString, Dialog 선언
+8. 다이얼로그- MoviesView.xaml에 다이얼로그관련 코드 2개 추가 + MoviesViewModel.cs에 다이얼로그 관련 변수 및 생성자 추가 + App.xaml.cs에 다이얼로그 관련 코드 추가
+9. 아이콘- MoviesView.xaml에 MahApps.iconpacks , 프로젝트명-속성-Window32 아이콘 찾아보기
+10. MahApps.Metro-MoviesView.xaml에 마하 관련 코드 2개 추가 , 태그 수정 + MoviesView.xaml.cs에 MetroWindow import
+11. 디자인
     - 상태바
     ```xml
     <!--상태바 영역-->
@@ -1484,7 +1485,7 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
     
 - <img src ='./day68/ui디자인.png' width = 600>
 
-12. [API 연동](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) TMDB API 구현
+12. API 연동- TMDB API 구현
     - api호출해서 가져올 데이터를 담을 클래스 MovieItem.cs( 베테랑1 영화정보) , MovieSearchResponse.cs(동일한 영화명 여러 시즌일 때, 베테랑1, 베테랑2) 작성
     - MoviesViewModel.cs에서 api호출해서 데이터가져오는 함수 구현
     ```csharp
@@ -1541,7 +1542,7 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
          <DataGridTextColumn Header="한글제목" FontWeight="Bold" Binding="{Binding Title}"></DataGridTextColumn>
     ```
     - <img src='./day68/클래스가2개인이유.png'>
-12. [URI](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) 포스터 
+12. URI -포스터 
     - 선택한 영화(SelectdMovieItem)이 있을 때, 영화포스터 보이도록
     - nopicture.png는 프로젝트폴더에 넣기
     - MoviesView.xaml 바인딩
@@ -1581,7 +1582,7 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
 
     }
     ```
-13. [기능 디테일](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
+13. 기능 디테일
     - 숫자 오른쪽 정렬
     ```xml
     <DataGridTextColumn Header="평점" Binding="{Binding Vote_average , StringFormat=F2}">
@@ -1618,7 +1619,7 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
     ```
     - <img src='./day68/영어입력검색.png' width=600>
 
-14. [상세보기기능](./day68/Day05Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs) 데이터그리드 더블클릭해서 영화정보 상세보기
+14. 상세보기기능 -데이터그리드 더블클릭해서 영화정보 상세보기
     - communityToolkit에서는 지원하지 않음
     - `Nuget패키지관리자에서 Microsoft.Xaml.Behaviors.Wpf 설치`
     - MovieView.xml에서 datagrid 밑에 코드 추가
@@ -1659,7 +1660,7 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
 
 
 ## 69일차(5/15)
-### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [(API 연동 앱 디자인)](./day69/Day06Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
+### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [iot_wpf_2025_api repository-\day69\Day06Wpf\MovieFinder2025\Views\TarilerViewModel]
 15. 기능 디테일
     1. 오른쪽 하단 시계
     ```xml
