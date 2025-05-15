@@ -1900,6 +1900,12 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
 
     ```
     - <img src='./day69/예외처리-개봉일미정인영화.png'>
+- 실행결과
+  
+
+https://github.com/user-attachments/assets/68a5e882-fe16-4654-a1ad-bc3c2301b952
+
+
 18. 예고편 보기 버튼 [(예고편 뷰)](./day69/Day06Wpf/MovieFinder2025/Views/TrailerView.xaml) [(예고편 뷰모델)](./day69/Day06Wpf/MovieFinder2025/ViewModels/TrailerViewModel.cs)
     1. TrailerView.xaml , TrailerViewModel.cs 생성 + 마하, 다이얼로그 코드 작성 + ui디자인
     2. 웹 컨트롤 환경세팅
@@ -2088,4 +2094,10 @@ https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
             YoutubeUri = SelectedYoutube.URL;
         }
         ```
-      
+
+- 실행결과
+
+https://github.com/user-attachments/assets/923ef789-ebdb-4d49-8fc3-64a147d462c6
+
+
+  
