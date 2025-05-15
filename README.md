@@ -1652,7 +1652,12 @@ https://github.com/user-attachments/assets/56c8d09f-460c-4697-952c-00f2c0f35a11
         }
     }
     ```
-    
+- 실행결과
+
+
+https://github.com/user-attachments/assets/6d225131-1427-4442-9868-6a37b8ecf123
+
+
 ## 69일차(5/15)
 ### 영화즐겨찾기 앱 WITH  openAPI + Youtube API  [(API 연동 앱 디자인)](./day69/Day06Wpf/MovieFinder2025/Views/MoviesView.xaml)[(API 연동 앱 코드)](./day69/Day06Wpf/MovieFinder2025/ViewModels/MoviesViewModel.cs)
 15. 기능 디테일
