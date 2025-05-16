@@ -2025,7 +2025,7 @@ https://github.com/user-attachments/assets/68a5e882-fe16-4654-a1ad-bc3c2301b952
             var servie = new YouTubeService(
                 new BaseClientService.Initializer()
                 {
-                    ApiKey = "AIzaSyC-ry_xG-vRtUqqP7PRWFk5HsJeYA0yrhw",
+                    ApiKey = "{youtube api키}",
                     ApplicationName = this.GetType().ToString()
                 });
             var req = servie.Search.List("snippet");
@@ -2102,3 +2102,252 @@ https://github.com/user-attachments/assets/923ef789-ebdb-4d49-8fc3-64a147d462c6
 
 
   
+## 70일차 (5/16) 
+### 부산맛집지도 앱 [iot_wpf_2025_api repository (day70/Day07Wpf/BusanRestaurantApp/)]
+1. 공공데이터포털 -부산맛집정보서비스 api키
+2. wpf애플리케이션 생성 + nuget 패키지
+    - mahApps, communitytoolkit, nlog, 구성관리자 x64로->cefsharp.wpf.netcore 설치,Newtonsoft.Json
+3. Helpers 폴더 생성 ,NLog.config(속성-항상복사)
+4. App.xaml에서 startUp생성 , startUri 제거, 리소스 + BusanMatjipViewModel.cs 생성자
+```csharp
+//App.xaml.cs
+   private void Application_Startup(object sender, StartupEventArgs e)
+   {
+       Common.DIALOGCOORDINATOR = DialogCoordinator.Instance;
+       var viewModel = new BusanMatjipViewModel(Common.DIALOGCOORDINATOR);
+       var view = new BusanMatjipView
+       {
+           DataContext = viewModel,
+       };
+       view.ShowDialog();
+   }
+
+   // BusanMatjipViewModel.cs
+    private IDialogCoordinator _dialogCoordinator;
+
+    public BusanMatjipViewModel(IDialogCoordinator coordinator)
+    {
+        this._dialogCoordinator = coordinator;
+        Common.LOGGER.Info("BusanMatjip 시작");
+
+
+    }
+```
+5. Views, ViewModels, Models , Helpers 폴더 생성 및 xaml, cs파일 생성
+```
+BusanRestaurantApp/
+├── Views/
+│   ├── BusanMatjipView.xaml
+│   └── GoogleMapView.xaml
+├── ViewModels/
+│   ├── BusanMatjipViewModel.cs
+│   └── GoogleMapViewModel
+├── Models/
+│   └── BusanItem.cs
+├── Helpers/
+│   └── Common.cs
+└── NLog.config
+
+```
+6. BusanMatjipView.xaml 디자인
+    - MahApps 코드 (xaml,cs)
+    - Dialog 코드 (xaml)
+    - 아이콘 설정
+    - UI
+    - 바인딩 
+    ```xml
+    <TextBlock Text="페이지번호" />
+    <mah:NumericUpDown Minimum="1" Value="{Binding PageNo}"/>
+
+    <TextBlock Text="결과수"/>
+    <mah:NumericUpDown Minimum="10" Value="{Binding NumOfRows}"/>
+
+    <Button Content="검색" Command="{Binding LoadDataCommand}">
+
+    <!--데이터 그리드 영역-->
+    <DataGrid  AutoGenerateColumns="True" SelectionMode="Single" SelectionUnit="FullRow" IsReadOnly="True"
+               ItemsSource="{Binding BusanItems}">
+    </DataGrid>
+    ```
+
+7. BusanItem.cs 클래스 
+    - api 요청문
+    ```
+    http://apis.data.go.kr/6260000/FoodService/getFoodKr?serviceKey={api decode 키}&numOfRows={한페이지에 나타나는 행의 수}&pageNo={페이지번호}
+    ```
+    - api 응답결과
+    ```xml
+      <item>
+        <MAIN_TITLE>만드리곤드레밥</MAIN_TITLE>
+        <LNG>128.95245</LNG>
+        <UC_SEQ>70</UC_SEQ>
+        <CNTCT_TEL>051-941-3669</CNTCT_TEL>
+        <MAIN_IMG_NORMAL>https://www.visitbusan.net/uploadImgs/files/cntnts/20191209162810545_ttiel</MAIN_IMG_NORMAL>
+        <ITEMCNTNTS>곤드레밥에는 일반적으로 건조 곤드레나물이 사용되는데, 이곳은 생 곤드레나물을 사용하여 돌솥밥을 만든다. 된장찌개와 함께 열 가지가 넘는 반찬이 제공되는 돌솥곤드레정식이 인기있다 </ITEMCNTNTS>
+        <PLACE>만드리곤드레밥</PLACE>
+        <SUBTITLE/>
+        <ADDR2/>
+        <USAGE_DAY_WEEK_AND_TIME>10:00-20:00 (19:50 라스트오더)</USAGE_DAY_WEEK_AND_TIME>
+        <GUGUN_NM>강서구</GUGUN_NM>
+        <ADDR1>강서구 공항앞길 85번길 13</ADDR1>
+        <RPRSNTV_MENU>돌솥곤드레정식, 단호박오리훈제</RPRSNTV_MENU>
+        <HOMEPAGE_URL/>
+        <TITLE>만드리곤드레밥</TITLE>
+        <MAIN_IMG_THUMB>https://www.visitbusan.net/uploadImgs/files/cntnts/20191209162810545_thumbL</MAIN_IMG_THUMB>
+        <LAT>35.177387</LAT>
+        </item>
+                
+    ```
+    - api응답결과를 담을 BusanItem.cs 클래스 속성
+    ```csharp
+    //콘텐츠id
+    public int UC_SEQ { get; set; }
+    //콘텐츠명
+    public string MAIN_TITLE { get; set; }
+    //구군
+    public string GUGUN_NM { get; set; }
+    //주소
+    public string ADDR1 { get; set; }
+    //위도
+    public double LNG { get; set; }
+    //경도
+    public double LAT { get; set; }
+    //연락처
+    public string CNTCT_TEL { get; set; }
+    //운영 및 시간
+    public string USAGE_DAY_WEEK_AND_TIME { get; set; }
+    //대표메뉴
+    public string RPRSNTV_MENU { get; set; }
+
+    //썸네일 이미지 
+    public string MAIN_IMG_THUMB {  get; set; }
+
+    //상세내용
+    public string ITEMCNTNTS {  get; set; }
+    ```
+8. BusanMatjipView.xaml.cs 코드 
+    - 속성 (다이얼로그 _dialogCoordinator, api응답결과 부산맛집 리스트 BusanItems, 페이지번호 PageNo, 결과행수 NumOfRows)
+    - 생성자
+    ```csharp
+    public BusanMatjipViewModel(IDialogCoordinator coordinator)
+    {
+        this._dialogCoordinator = coordinator;
+       
+        // 초기값 설정
+        PageNo = 1;
+        NumOfRows = 10;
+    }
+    ```
+    - api에 요청하고 응답받는 함수 LoadData
+    ```csharp
+    [RelayCommand]
+    private async Task LoadData()
+    {
+        string myApiKey = "{공공데이터포털 api키}";
+        string baseUri = "http://apis.data.go.kr/6260000/FoodService/getFoodKr?";
+        StringBuilder strUri = new StringBuilder();
+        strUri.Append($"serviceKey={myApiKey}");
+        strUri.Append($"&numOfRows={NumOfRows}");
+        strUri.Append($"&pageNo={PageNo}");
+        string totalOpenApi = $"{baseUri}{strUri}";
+            HttpClient client = new HttpClient();
+        ObservableCollection<BusanItem> busanItems = new ObservableCollection<BusanItem>();
+
+        try
+        {
+            var response = await client.GetStringAsync(totalOpenApi);
+            //Common.LOGGER.Info(response);
+
+            //Newtonsoft.json으로 json처리 방식
+            /*
+              API 응답은 XML 형식이고, JObject.Parse()는 JSON 전용 파서이기 때문입니다.
+               그래서 XML을 JSON 문자열로 변환한 다음에야 JObject.Parse()를 사용할 수 있습니다.
+             */
+            var doc = XDocument.Parse(response);
+            string jsonText = JsonConvert.SerializeXNode(doc);
+
+            // 이제 jsonText는 JSON 문자열입니다.
+            var jsonResult = JObject.Parse(jsonText);
+            //Common.LOGGER.Info(jsonResult);
+
+            // ?(null 조건 연산자)를 붙이는 이유:  중간에 하나라도 없으면 null 반환 후 다음 접근을 중단하므로 예외 없이 안전하게 처리됩니다.
+            //.ToString()을 붙이는 이유: JToken은 JSON 구조 안에 있는 모든 값의 기본 타입입니다.
+            var resultCode = jsonResult["response"]?["header"]?["resultCode"]?.ToString();
+
+
+            if (resultCode == "00")
+            {
+
+                // Check if "body" and "items" exist before proceeding
+                var body = jsonResult["response"]?["body"];
+                if (body != null)
+                {
+                    var items = body["items"];
+                    if (items != null)
+                    {
+                        var jsonArray = items["item"] as JArray;
+                        if (jsonArray != null)
+                        {
+                            foreach (var itemDetail in jsonArray)
+                            {
+                                //Common.LOGGER.Info(itemDetail.ToString());
+                                busanItems.Add(
+                                    new BusanItem
+                                    {
+                                        UC_SEQ = Convert.ToInt32(itemDetail["UC_SEQ"]),
+                                        MAIN_TITLE = Convert.ToString(itemDetail["MAIN_TITLE"]),
+                                        GUGUN_NM = Convert.ToString(itemDetail["GUGUN_NM"]),
+                                        ADDR1 = Convert.ToString(itemDetail["ADDR1"]),
+                                        LNG = Convert.ToDouble(itemDetail["LNG"]),
+                                        LAT = Convert.ToDouble(itemDetail["LAT"]),
+                                        CNTCT_TEL = Convert.ToString(itemDetail["CNTCT_TEL"]),
+                                        USAGE_DAY_WEEK_AND_TIME = Convert.ToString(itemDetail["USAGE_DAY_WEEK_AND_TIME"]),
+                                        RPRSNTV_MENU = Convert.ToString(itemDetail["RPRSNTV_MENU"]),
+                                        MAIN_IMG_THUMB = Convert.ToString(itemDetail["MAIN_IMG_THUMB"]),
+                                        ITEMCNTNTS = Convert.ToString(itemDetail["ITEMCNTNTS"]),
+                                    }
+                                    );
+                            }
+                            BusanItems = busanItems;
+                        }
+                        else
+                        {
+                            Common.LOGGER.Warn("Item array is empty or null.");
+                        }
+                    }
+                    else
+                    {
+                        Common.LOGGER.Warn("'items' is null.");
+                    }
+                }
+                else
+                {
+                    Common.LOGGER.Warn("'body' is null.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"오류 코드: {resultCode}");
+            }
+        }
+
+        catch (Exception ex)
+        {
+            await _dialogCoordinator.ShowMessageAsync(this, "api 요청 결과", ex.Message);
+            Common.LOGGER.Fatal(ex);
+            return;
+        }
+    }
+
+    ```
+- 실행결과
+
+
+
+- 로그결과
+    - api응답결과 response (xml형식)
+    - <img src='./day70/응답결과xml형식.png'>
+    - response가 json으로 변환된 jsonResult
+    - <img src='./day70/json으로 변환한 응답결과.png'>
+
+    
