@@ -2355,3 +2355,38 @@ https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
     - <img src='./day70/json으로 변환한 응답결과.png'>
 
     
+### mvvm , mvvm + caliburn, mvvm + commnunity프레임워크 비교
+- mvvm 
+    - xaml파일 : DynamicResource ,x:Class="WpfBasicApp2.View.MainView" 
+    - cs파일 : PropertyChangedEventHandler ,OnPropertyChanged
+    - app.xaml의 startUri 재정의(/View/MainView.xaml)
+    - <img src='./day70/mvvm.png'>
+- mvvm + caliburn 
+    - Conductor, NotifyOfPropertyChange, bootstrapper 
+    - app.xaml의 startUri삭제 및 startUp 정의
+    - Views, ViewModels, Models
+    - <img src ='./day70/mvvm caliburn 1.png'>
+    - <img src ='./day70/mvvm caliburn2.png'>
+- mvvm + communityToolkit 
+    - SetProperty, [RelayCommand]  
+    - app.xaml의 startUri삭제 및 startUp 정의
+    - Views, ViewModels, Models
+    - <img src ='./day70/mvvm community.tool.kit.png'>
+
+### db연동, api연동
+- db연동 - 데이터베이스, 클래스 필요
+    - select
+        - <img src='./day70/select db.png'>
+    - insert
+        - <img src='./day70/insert db.png'>
+    - delete
+        - <img src='./day70/delete db.png'>
+    - update
+
+- api연동 - api키, 클래스 필요
+    - TMDB api호출
+        - <img src='./day70/TMDB api호출.png'>
+    - Youtube API 호출
+        - <img src='./day70/Youtube API 호출.png'>
+    - 공공데이터포털 API호출
+        - <img src='./day70/공공데이터포털 API호출.png'>
