@@ -2344,6 +2344,10 @@ BusanRestaurantApp/
 
 
 
+https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
+
+
+
 - 로그결과
     - api응답결과 response (xml형식)
     - <img src='./day70/응답결과xml형식.png'>
