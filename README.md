@@ -2441,6 +2441,11 @@ https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
         MatjibLocation = "";
     }
     ```
+- 실행결과
+  
+
+https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
+
 
 
 ### mvvm , mvvm + caliburn, mvvm + commnunity프레임워크 비교
