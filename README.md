@@ -2603,6 +2603,12 @@ https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
         client.disconnect()
 
     ```
+6. 실행결과
+
+
+https://github.com/user-attachments/assets/ef4500c0-f1fe-41b9-ac38-ee087f1b54dc
+
+
 #####  프로젝트 준비 [개발코드 강사깃허브](https://github.com/hugoMGSung/hungout-with-arduino/tree/main/SmartHomeDIY)
 1. day08폴더 내에 다운받은 코드 압축 풀기 
 2. day08에서 프로젝트 생성
