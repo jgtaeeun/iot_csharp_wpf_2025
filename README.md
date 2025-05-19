@@ -2447,8 +2447,8 @@ https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
 https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
 
 
-
-### mvvm , mvvm + caliburn, mvvm + commnunity프레임워크 비교
+### ==================================================
+### mvvm , mvvm + caliburn, mvvm + commnunity프레임워크 비교 
 - mvvm 
     - xaml파일 : DynamicResource ,x:Class="WpfBasicApp2.View.MainView" 
     - cs파일 : PropertyChangedEventHandler ,OnPropertyChanged
@@ -2465,8 +2465,8 @@ https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
     - app.xaml의 startUri삭제 및 startUp 정의
     - Views, ViewModels, Models
     - <img src ='./day70/mvvm community.tool.kit.png'>
-
-### db연동, api연동
+### ==================================================
+### db연동, api연동 
 - db연동 - 데이터베이스, 클래스 필요
     - select
         - <img src='./day70/select db.png'>
@@ -2483,4 +2483,178 @@ https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
         - <img src='./day70/Youtube API 호출.png'>
     - 공공데이터포털 API호출
         - <img src='./day70/공공데이터포털 API호출.png'>
+### ==================================================
+### 스마트홈 연동 모니터링 앱
+##### 구성
+- 전면부 
+    - <img src='./day71/전면부.jpg' width =500>
+- 후면부
+    - <img src='./day71/후면부.jpg'  width =500>
 
+- 수치
+    - <img src='./day71/수치.jpg'  width =500>
+##### MQTT 
+- Message Queueing Telemetry Transport : 기계간 통신용 경량 메시징 프로토콜
+- Publish/Subscribe 라는 출판쪽 용어로 사용
+    - publish (출간) : 메시지를 만들어서 전달
+    - subscribe(구독) : 필요한 메시지를 수신받아서 사용
+- Server/Client 프로그램으로 동작
+- 데이터는 휘발성: 받는 사람이 없으면 데이터는 사라짐. DB에 저장하는 구성을 해줘야 함
+- <img src='./day71/MQTT.png'>
+
+#### MQTT 시뮬레이션 프로젝트 시작
+1. MQTT 브로커 설치
+    - https://mosquitto.org/download/에서 Binary Installation- Windows- mosquitto-2.0.21a-install-windows-x64.exe 설치
+    - 설치 후 window+R에 services.msc 입력해서 Mosquitto Broker 찾아서 서비스 중지
+2. 설정파일 수정
+    - notdpad++ 관리자모드로 열기 - 설치된 경로 C:\Dev\tool\mosquitto에 있는  mosquitto.conf를 파일 열기
+    - 212줄에 있는 #listeners 수정 => Listeners 1883 
+    ```
+    # MQTT 디폴트 포트번호 1883
+    Listeners 1883
+    ```
+    - 534줄에 있는 allow _anonymous false 수정 =>  allow_anonymous true
+    - 파일저장 후 , 서비스 재시작
+3. Window보안
+    - Window보안 - 방화벽 및 네트워크 보호- 고급설정
+    - 인바운드 규칙- 새규칙- 포트 - TCP , 특정로컬포트 1883 - 연결허용- 3항목 다 체크- 이름, 설명 작성 - 마침
+
+4. MQTT Explorer 설치
+    - https://mqtt-explorer.com/ 에서 download - window platform - installer
+    - <img src='./day71/MQTT EXPLORER 설정.png'>
+    - window+r의 services.msc에서 mosquitto.service 시작하기
+    - 위의 방법이 안 될 경우, powershell에서 아래의 코드 실행 후 explorer에서 connect 시도하기
+    ```shell
+    PS C:\Users\Admin> cd C:\Dev\tool\mosquitto
+    PS C:\Dev\tool\mosquitto> .\mosquitto.exe -v -c C:\Dev\tool\mosquitto\mosquitto.conf
+    ```
+    - <img src='./day71/실행화면.png' width =500>
+5. vs code에서 Mqtt.py파일 생성
+    - 모듈설치
+    ```shell
+    PS C:\Source\iot_csharp_wpf_2025> python --version
+    Python 3.11.9
+    PS C:\Source\iot_csharp_wpf_2025> python
+    >>> import sys
+    >>> sys.executable
+    'C:\\Users\\Admin\\.pyenv\\pyenv-win\\versions\\3.11.9\\python.exe'
+    >>> exit()
+
+    PS C:\Source\iot_csharp_wpf_2025> pip install paho-mqtt
+    ```
+    - 코드작성[paho-mqtt 라이브러리를 이용해 MQTT 브로커에 메시지를 발행(Publish)](./day71/Pythons/MqttPub.py)
+    ```python
+    #IOT110 클라이언트가 "무한루프로 MQTT 메시지를 Publish만 하는" 구조
+    # pip install paho-mqtt
+
+    import paho.mqtt.client as mqtt
+    import json
+    import datetime as dt
+    import uuid
+    from collections import OrderedDict
+    import random
+    import time   #스레드 위한 timer
+
+    #power shell- ipconfig -  IPv4 주소 . . . . . . . . . : 210.119.12.110
+    PUB_ID = 'IOT110'                     # 클라이언트 ID (e.g., "IOT110")
+    BROKER = '210.119.12.110'            # 브로커 IP (자기 컴퓨터)
+    PORT = 1883                          # MQTT 기본 포트
+    TOPIC = 'smarthome/110/topic'        # MQTT 토픽
+    COLORS = ['RED', 'ORANGE', 'YELLOW', 'GREEN', 'BLUE', 'NAVY', 'PUPPLE']
+    COUNT = 0                            # 메시지 카운터
+
+    #브로커 연결 성공 시 실행됨
+    def on_connect(client, userdata, flags, reason_code, properties = None):
+        print(f'Connectedc with reason code : {reason_code}')
+
+    #publish완료후 발생 콜백 /메시지 발행 완료 시 실행됨
+    def on_publish(client, userdata,mid) :
+        print(f'Message published mid : {mid}')
+
+
+    try :
+        
+        #MQTT 클라이언트 생성 후 콜백 등록
+        client = mqtt.Client(client_id=PUB_ID , protocol=mqtt.MQTTv5 )
+        client.on_connect = on_connect
+        client.on_publish = on_publish
+
+        client.connect(BROKER ,PORT)
+        client.loop_start()
+
+        while True :
+            #publish실행
+            #매초마다 랜덤 색상을 선택하고, 타임스탬프와 함께 메시지 발행
+            #qos=1 : 적어도 한 번은 전송됨 (보장성 있는 전달)
+
+            currTime = dt.datetime.now()
+            selected = random.choice(COLORS)
+            COUNT += 1
+            client.publish(TOPIC, payload = f'Emulate from {PUB_ID}[{COUNT}] :  {selected} /{currTime}', qos = 1)
+            time.sleep(1)
+
+    except Exception as ex:
+        print(f"Error raised: {ex}")
+
+    #Ctrl + C 누르면 안전하게 전송을 중단하고 연결 종료
+    except KeyboardInterrupt :
+        print('MQTT 전송중단')
+        client.loop_stop()
+        client.disconnect()
+
+    ```
+#####  프로젝트 준비 [개발코드 강사깃허브](https://github.com/hugoMGSung/hungout-with-arduino/tree/main/SmartHomeDIY)
+1. day08폴더 내에 다운받은 코드 압축 풀기 
+2. day08에서 프로젝트 생성
+3. 솔루션 탐색기에서 솔루션 이름 우클릭 → "기존 프로젝트 추가(Add Existing Project)" →압축 해제한 폴더 내 .csproj 또는 .vbproj 선택
+4. 프로젝트가 솔루션에 추가됨 확인 및 솔루션 빌드
+
+##### 프로젝트 시작
+1. 화면 UI 변경
+2. Nuget패키지 - CommunityTookit 설치
+3. Views, ViewModels, Models폴더 생성
+4. Views에 MainWindow 넣기 + ViewModels에 MainViewModel.cs 생성
+5. namespace수정(WpfSmartHomeApp.Views.MainWindow , WpfSmartHomeApp.ViewModels.MainViewModel)
+6. App.xaml의 StartupUri제거 및 startUp함수 cs파일에서 정의 
+7. MianWindow.xaml에 Loal생성 및 MianWindow.xaml.cs에서 함수정의 +MianWindow에서 윈도우_로드함수 호출시, MainViewModel의 load함수 호출되도록 연결
+```xml
+<!--MianWindow.xaml-->
+<Window 
+xmlns:vm="clr-namespace:WpfSmartHomeApp.ViewModels"
+Loaded="window_Loaded">
+```
+```csharp
+//MianWindow.xaml.cs
+private void window_Loaded(object sender, RoutedEventArgs e)
+{
+    if (DataContext is MainViewModel vm)
+    {
+        vm.LoadedCommand.Execute(null); 
+    }
+}
+```
+
+```csharp
+//MainViewModel.cs
+[RelayCommand]
+public void OnLoaded()
+{
+    HomeTemp = 30;
+    HomeHumid = 43.2;
+
+    DetectResult = "Detected Human!";
+    IsDetectOn = true;
+    RainResult = "Raining";
+    IsRainOn = true;
+    ConditionerResult = "Aircon On!";
+    IsConditionerOn = true;
+    LightResult = "Light On!";
+    IsLightOn = true;
+}
+```
+
+8. MainWindow 바인딩 처리, MainViewModel.cs에서 바인딩 값들 초기화
+- <img src='./day71/스마트홈 ui.png' width =500>
+
+
+## 72일차(5/20)
