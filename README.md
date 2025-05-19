@@ -2354,7 +2354,95 @@ https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
     - response가 json으로 변환된 jsonResult
     - <img src='./day70/json으로 변환한 응답결과.png'>
 
+## 71일차 (5/19)
+### 부산맛집지도 앱 [iot_wpf_2025_api repository (day71/Day08Wpf/BusanRestaurantApp/)]
+- BusanMatjipView.xaml 데이터그리드 컬럼들 디자인
+    - DataGridTemplateColumn. DataGridTextColumn
+    ```xml
+    <DataGridTemplateColumn Header="대표이미지" Width="auto">
+        <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+                <Image Source="{Binding MAIN_IMG_THUMB}" Stretch="Uniform" Width="65" Height="50"/>
+            </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+    </DataGridTemplateColumn>
+
+    <DataGridTemplateColumn Header="주소" Width="220">
+        <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+                <TextBlock Text="{Binding ADDR1}" TextWrapping="Wrap" MaxWidth="220"/>
+            </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+    </DataGridTemplateColumn>
+    ```
+- 구글지도 뷰, 뷰모델
+    1. 부산맛집 뷰,뷰모델에서 데이터그리드 더블클릭시 뷰이동
+    ```xml
+    <DataGrid  ItemsSource="{Binding BusanItems}"  SelectedItem="{Binding SelectedMatjipItem}">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseDoubleClick">
+            <i:InvokeCommandAction Command="{Binding MatgibItemDoubleClickCommand}"></i:InvokeCommandAction>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    ```
+    ```csharp
+     [RelayCommand]
+    private async Task MatgibItemDoubleClick()
+    {
+        
+        var viewModel = new GoogleMapViewModel();
+        viewModel.SelectedMatjipItem = SelectedMatjipItem;
+        var view = new GoogleMapView { 
+            DataContext = viewModel,
+        };
+        view.Owner=Application.Current.MainWindow;
+        view.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Common.LOGGER.Info("현재 선택한 맛집에 대한 구글맵 뷰 시작");
+        Common.LOGGER.Info($"위도:{SelectedMatjipItem.LAT}, 경도:{SelectedMatjipItem.LNG}");
+        view.ShowDialog();
+    }
+    ```
+    2. 구글맵 xml
+    ```xml
+    xmlns:cefsharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+
+    <Label Grid.Row="0" FontSize="20" FontWeight="Bold" Margin="5" Content="{Binding SelectedMatjipItem.MAIN_TITLE }"></Label>
+    <cefsharp:ChromiumWebBrowser Grid.Row="1" Address="{Binding MatjibLocation}" Margin="5"></cefsharp:ChromiumWebBrowser>
+    ```
+    3. 구글맵 csharp
+    ```csharp
+    //선택한 맛집
+    private BusanItem _selectedMatjipItem;
+    public BusanItem SelectedMatjipItem
+    {
+        get => _selectedMatjipItem;
+        set
+        {
+            SetProperty(ref _selectedMatjipItem, value);
+            MatjibLocation = $"https://google.com/maps/place/{SelectedMatjipItem.LAT},{SelectedMatjipItem.LNG}";
+        }
+    }
+
+
+    // MatjibLocation
+    private String _matjibLocation;
+
     
+    public String MatjibLocation
+    {
+        get => _matjibLocation;
+        set => SetProperty(ref _matjibLocation, value);
+        
+        
+    }
+
+    public GoogleMapViewModel()
+    {
+        MatjibLocation = "";
+    }
+    ```
+
+
 ### mvvm , mvvm + caliburn, mvvm + commnunity프레임워크 비교
 - mvvm 
     - xaml파일 : DynamicResource ,x:Class="WpfBasicApp2.View.MainView" 
@@ -2390,3 +2478,4 @@ https://github.com/user-attachments/assets/a0ec1f67-d0e3-4acb-8e8e-54e49d2abf61
         - <img src='./day70/Youtube API 호출.png'>
     - 공공데이터포털 API호출
         - <img src='./day70/공공데이터포털 API호출.png'>
+
