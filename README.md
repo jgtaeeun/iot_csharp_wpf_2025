@@ -2910,5 +2910,9 @@ WpfMqttSubApp/
     6. db에서 데이터 불러오기
 - MqttPub.py, mqtt.explorer, MainView.xaml 실행결과 : db버튼 누르면 db연결성공메시지, mqtt버튼 누르면 데이터 구독해옴과 동시에 mysql데이터베이스에 저장됨
 
+
+https://github.com/user-attachments/assets/bbe29cda-5f82-4cec-89f7-cabecff99a56
+
+
 ## 73일차(5/21)
 ### 스마트홈 연동 모니터링 앱
