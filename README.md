@@ -2516,7 +2516,7 @@ https://github.com/user-attachments/assets/4882d33e-aeba-4006-a69e-41b23e1778e7
     - 534줄에 있는 allow _anonymous false 수정 =>  allow_anonymous true
     - 파일저장 후 , 서비스 재시작
 3. Window보안
-    - Window보안 - 방화벽 및 네트워크 보호- 고급설정
+    - 방화벽 및 네트워크 보호- 고급설정 또는 제어판-windows defender방화벽-고급설정
     - 인바운드 규칙- 새규칙- 포트 - TCP , 특정로컬포트 1883 - 연결허용- 3항목 다 체크- 이름, 설명 작성 - 마침
 
 4. MQTT Explorer 설치
@@ -2664,3 +2664,251 @@ public void OnLoaded()
 
 
 ## 72일차(5/20)
+### 스마트홈 연동 모니터링 앱 [스마트홈 연동 모니터링 앱 view](./day72/Day09Wpf/WpfSmartHomeApp/Views/MainWindow.xaml)
+
+
+
+#### MQTT 시뮬레이션 프로젝트 (계속) [mqtt 코드](./day72/Pythons/MqttPub.py)
+1. MQTTPub.py소스코드에 임의의 더미 Iot 센서값 정의 + json형태로 변환해서 publish
+    - <img src='./day72/json형태로 mqtt실행.png' width=500>
+
+##### 모니터링 시뮬레이션 프로젝트 시작
+1. 프로젝트 생성 및 모듈 설치(mahapps, communitytoolkit, newtonsoft.json, mqttnet )
+2. 폴더 구조
+```
+WpfMqttSubApp/
+├── Views/
+│   └── MainView.xaml
+├── ViewModels/
+│   └──  MainViewModel.cs
+├── Models/
+│   └── SensorInfo.cs
+└──  Helpers/
+    └── RichTextBoxHelper.cs
+```
+3. App.xaml(리소스), App.xaml.cs(뷰연결), MainView.xaml(마하) , MainView.xaml.cs(마하) 
+4. MainView.xaml ui 디자인
+5. MainView.xaml, MainViewModel.cs 바인딩 
+6. telnet 명령어로 서버서비스가 동작중인지 확인
+    - window 기능켜기/끄기 - telnet client 체크 후 확인
+    - cmd에 telnet 입력
+    ```shell
+    C:\Users\Admin>telnet ipv4주소 포트번호
+    ```
+7. RichTextBox를 MVVM에서 데이터를 바인딩하려면 RichTextBoxHelper클래스 생성 및 BindableDocument속성을 추가적으로 만들어야 함.
+    ```csharp
+    public static class RichTextBoxHelper
+    {
+        // 사용자가 만든 바인딩할 문자열 프로퍼티  BindableDocument
+        public static readonly DependencyProperty BindableDocumentProperty =
+            DependencyProperty.RegisterAttached(
+                "BindableDocument",
+                typeof(string),
+                typeof(RichTextBoxHelper),
+                new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnBindableDocumentChanged));
+
+        // 속성 BindableDocument의 게터함수
+        public static string GetBindableDocument(DependencyObject obj)
+        {
+            return (string)obj.GetValue(BindableDocumentProperty);
+        }
+
+        // 속성 BindableDocument의 세터함수
+        public static void SetBindableDocument(DependencyObject obj, string value)
+        {
+            obj.SetValue(BindableDocumentProperty, value);
+        }
+
+        // 속성값 변경되었을 때 이벤트처리
+        private static void OnBindableDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is RichTextBox richTextBox)
+            {
+                // 기존 문서 클리어
+                richTextBox.Document.Blocks.Clear();
+                // 새 문자열을 포함하는 Paragraph 추가
+                richTextBox.Document.Blocks.Add(new Paragraph(new Run(e.NewValue as string ?? string.Empty)));
+            }
+        }
+    }
+    ```
+8. RichTextBox 바인딩
+    ```xml
+    <mah:MetroWindow
+        xmlns:helper ="clr-namespace:WpfMqttSubApp.Helpers"
+        xmlns:vm ="clr-namespace:WpfMqttSubApp.ViewModels">
+    <RichTextBox x:Name ="LogBox" Grid.Row="1" Margin="5" VerticalScrollBarVisibility="Visible" 
+             IsReadOnly="True"
+             helper:RichTextBoxHelper.BindableDocument="{Binding LogText, UpdateSourceTrigger=PropertyChanged}">
+    ```
+    ```csharp
+    private string _logText;
+    public string LogText
+    {
+        get => _logText;
+        set => SetProperty(ref _logText, value);    
+    }
+    ```
+9. RichTextBox에 바인딩할 값 LogText(1) - mqtt
+    - MqttPub.py 실행 - 임의의 센서 데이터를 JSON 형식으로 smarthome/110/topic이라는 토픽에 주기적으로 Publish ,  MQTT 브로커에 전송합니다.
+    - mqtt explorer 실행  - 클라이언트들이 주고받는 메시지를 중개하는 역할
+    - MainView.xaml 실행 - MQTT 클라이언트를 생성하고 smarthome/110/topic 토픽에 구독하여 메시지를 수신 , 이썬에서 전송하는 메시지를 수신하고, 수신된 메시지를 LogText로 출력
+    ```xml
+    <!--mqtt 연결 버튼-->
+    <Button   Command="{Binding ConnectMqttCommand}">
+        <TextBlock Text="CONNECT"  Margin="5,0"></TextBlock>
+    </Button>
+    ```
+    ```csharp
+    [RelayCommand]
+    public async Task ConnectMqtt ()
+    {
+        if (string.IsNullOrEmpty(BrokerHost))
+        {
+            await this.dialogCoordinator.ShowMessageAsync(this, "브로커연결", "브로커연결합니다.");
+            return;
+        }
+
+        //mqtt 브로커에 접속해서 데이터를 가져오기
+        ConnectMqttBroker();
+    }
+
+    private async Task ConnectMqttBroker()
+    {   //mqtt 클라이언트 생성
+        var mqttFactory = new MqttClientFactory();
+        _mqttClient = mqttFactory.CreateMqttClient();
+
+        //matt 클라이언트 접속 설정
+        var mqttClientOptions = new MqttClientOptionsBuilder()
+            .WithTcpServer(BrokerHost)
+            .WithCleanSession(true)
+            .Build();
+
+        //matt 접속 후 이벤트 처리
+        _mqttClient.ConnectedAsync += async e =>
+        {
+            LogText += "MQTT Broker 연결성공\n";
+
+            //연결이후 구독(subscribe)
+            // 파이썬에서 MQTT 메시지를 publish할 때 사용하는 topic이 "smarthome/110/topic"이라면, 
+            //그 데이터를 받기 위해서는 subscribe할 때 동일한 topic인 "smarthome/110/topic"을 사용해야 합니다.
+            await _mqttClient.SubscribeAsync("smarthome/110/topic");
+        };
+
+        //MQTT 클라이언트에서 메시지 수신 시 이벤트 처리
+        _mqttClient.ApplicationMessageReceivedAsync += e =>
+        {
+            var topic = e.ApplicationMessage.Topic;
+            var payload = e.ApplicationMessage.ConvertPayloadToString(); //byte데이터를 utf-8문자열로 변환
+            LogText += $"{payload}\n";          //payload는 MqttPub.py에서 만든 임의의 센서값  json데이터이다.
+
+            return Task.CompletedTask;
+        };
+
+        await _mqttClient.ConnectAsync(mqttClientOptions);
+    }
+
+    ```
+10. RichTextBox에 바인딩할 값 LogText(2) - db
+    1. mysql에서 smarthome 스키마 생성 + 테이블생성
+    ```sql
+    CREATE TABLE `smarthome`.`fakedatas` (
+    `sensing_dt` DATETIME NOT NULL,
+    `pub_id` VARCHAR(10) NOT NULL,
+    `count` DECIMAL NOT NULL,
+    `temp` DECIMAL(5,1) NOT NULL,
+    `humid` DECIMAL(5,1) NOT NULL,
+    `light` CHAR(1) NOT NULL,
+    `human` CHAR(1) NOT NULL,
+    PRIMARY KEY (`sensing_dt`, `pub_id`));
+    ```
+    2. db연결, 해제 
+  
+    ```csharp
+    private string _connString = string.Empty;
+    private MySqlConnection connection;
+
+
+    [RelayCommand]
+    public async Task ConnectDB()
+    {
+        if (string.IsNullOrEmpty(DBHost))
+        {
+            await this.dialogCoordinator.ShowMessageAsync(this, "db연결합니다.", "db연결실패");
+            return;
+        }
+        _connString = $"Server={DBHost};Database=smarthome;Uid=root;Pwd=12345;Charset=utf8";
+        await ConnectDatabaseServer();
+    
+    }
+
+    private async Task ConnectDatabaseServer()
+    {
+        try
+        {
+            connection = new MySqlConnection(_connString);
+            connection.Open();
+            LogText += $"{DBHost} DB서버 접속 성공 ! {connection.State}\n";
+        }
+        catch (Exception ex)
+        {
+            LogText += $"{DBHost} DB서버 접속 실패 :{ex.Message}\n";
+        }
+    }
+
+    public void Dispose()
+    {   //리소스 해제 
+        connection?.Dispose();
+    }
+    ```
+    3. db서버에서 접속자 정보 확인
+    ```sql
+    select * from information_schema.processlist limit 10;
+    ```
+    - <img src ='./day72/sql로 접속확인.png'>
+    4. 구독한 데이터를 받아올 저장공간인 SensorInfo 클래스 작성 [SensorInfo.cs](./day72/Day09Wpf/WpfMqttSubApp/Models/SensorInfo.cs)
+    5. mqtt브로커주소 버튼 클릭 시, 구독한 데이터를 db에 저장
+        - db주소 버튼 클릭해서 connection, _connstring 초기화
+        - mqtt브로커주소 버튼 클릭해서 데이터를 db에 저장 
+    ```csharp
+    private async Task ConnectMqttBroker()
+    {
+        _mqttClient.ApplicationMessageReceivedAsync += e =>
+        {
+            var topic = e.ApplicationMessage.Topic;
+            var payload = e.ApplicationMessage.ConvertPayloadToString(); //byte데이터를 utf-8문자열로 변환
+        
+            //json으로 변경하여 db에저장하기 위한 과정
+            var data = JsonConvert.DeserializeObject<SensorInfo>(payload);
+            // Debug.WriteLine($"{data.COUNT} /{data.SENSING_DT}/{data.HUMID}/ {data.LIGHT}");
+            SaveSensingData(data);
+        };
+    }
+
+
+    private async Task SaveSensingData(SensorInfo data)
+    {
+        string query = "INSERT INTO fake_datas VALUES (@SENSING_DT, @PUB_ID,@COUNT,@TEMP ,@HUMID,@RAIN,@PERSON,@LIGHT)";
+        //Debug.WriteLine(connection.State);
+        //Debug.WriteLine(System.Data.ConnectionState.Open);
+        if (connection.State == System.Data.ConnectionState.Open)
+            {
+                using var cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@SENSING_DT", data.SENSING_DT);
+                cmd.Parameters.AddWithValue("@PUB_ID", data.PUB_ID);
+                cmd.Parameters.AddWithValue("@COUNT", data.COUNT);
+                cmd.Parameters.AddWithValue("@TEMP", data.TEMP);
+                cmd.Parameters.AddWithValue("@HUMID", data.HUMID);
+                cmd.Parameters.AddWithValue("@RAIN", data.RAIN);
+                cmd.Parameters.AddWithValue("@PERSON", data.PERSON);
+                cmd.Parameters.AddWithValue("@LIGHT", data.LIGHT);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+    }
+    ```
+    6. db에서 데이터 불러오기
+- MqttPub.py, mqtt.explorer, MainView.xaml 실행결과 : db버튼 누르면 db연결성공메시지, mqtt버튼 누르면 데이터 구독해옴과 동시에 mysql데이터베이스에 저장됨
+
+## 73일차(5/21)
+### 스마트홈 연동 모니터링 앱
