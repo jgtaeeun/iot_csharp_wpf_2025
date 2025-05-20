@@ -1,0 +1,4 @@
+도커 실행 안 될 때
+1. 도커 삭제 , appdata/docker삭제, C:\Program Files/docker삭제 , 레지스트리-docker삭제
+2. 윈도우기능켜기/끄기 -hyper, window 하위 linux , 가상머신 체크
+3. 도커 설치 실행 파일 실행
