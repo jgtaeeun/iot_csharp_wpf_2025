@@ -2907,7 +2907,7 @@ WpfMqttSubApp/
             }
     }
     ```
-    6. db에서 데이터 불러오기
+
 - MqttPub.py, mqtt.explorer, MainView.xaml 실행결과 : db버튼 누르면 db연결성공메시지, mqtt버튼 누르면 데이터 구독해옴과 동시에 mysql데이터베이스에 저장됨
 
 
@@ -2915,4 +2915,182 @@ https://github.com/user-attachments/assets/bbe29cda-5f82-4cec-89f7-cabecff99a56
 
 
 ## 73일차(5/21)
-### 스마트홈 연동 모니터링 앱
+### 스마트홈 연동 모니터링 앱 
+
+#### 스마트홈 기기 실제 Iot센서데이터 모니터링앱 [iot센서데이터 구독해오기](./day73/Day10Wpf/WpfMqttSubApp/ViewModels/MainViewModel.cs)
+1. 72일차 작성한 MQTT Subscribe앱에 Iot센서데이터 넣음 ->강사ip로 BrokerHost변경 + topic을 "pknu/sh01/data"로 변경 + MainView.xaml파일만 실행
+    - SmartHome MQTT Json Key값
+        - L : Light (전등)
+        - R : Rain  
+        - T : Temp
+        - H : Humid
+        - F : Fan (선풍기, 에어컨)
+        - V : Vulernability (침입 감지)
+        - RL : Real Light  (실제 전등 켜짐 여부)
+        - CB : ChaimBell (현관벨)
+    - <img src ='./day73/구독데이터 확인.png'>
+2. db 테이블 생성 + 클래스 생성
+    - 클래스 생성 시, json데이터의 키값 그대로 작성
+    ```csharp
+    public class SensingInfo
+    {
+        public int L{  get; set; } 
+        public int R { get; set; }   
+        public float T {  get; set; }  
+        public float H {  get; set; } 
+        public string F { get; set; }   
+        public string V{ get; set; }
+        public string RL { get; set; }    
+        public string CB { get; set; } 
+
+    }
+    ```
+3. db연결, 해제 ,구독한 데이터를 db에 저장
+    ```csharp
+    private async Task ConnectMqttBroker()
+    {
+        _mqttClient.ApplicationMessageReceivedAsync += e =>
+        {
+            var topic = e.ApplicationMessage.Topic;
+            var payload = e.ApplicationMessage.ConvertPayloadToString(); //byte데이터를 utf-8문자열로 변환
+        
+            //json으로 변경하여 db에저장하기 위한 과정
+            var data = JsonConvert.DeserializeObject<SensingInfo>(payload);
+            SaveSensingData(data);
+        };
+    }
+
+
+    private async Task SaveSensingData(SensingInfo data)
+    {
+        sstring query = " SET time_zone = 'Asia/Seoul';INSERT INTO sensing_datas(Light,Rain,Temp,Humid,Fan,Vulernability,Real_Light,ChaimBell,Sensing_date) VALUES (@Light, @Rain,@Temp ,@Humid,@Fan,@Vulernability,@Real_Light,@ChaimBell,now())";
+     
+        try
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                using var cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@Light", data.L);
+                cmd.Parameters.AddWithValue("@Rain", data.R);
+                cmd.Parameters.AddWithValue("@Temp", data.T);
+                cmd.Parameters.AddWithValue("@Humid", data.H);
+                cmd.Parameters.AddWithValue("@Fan", data.F);
+                cmd.Parameters.AddWithValue("@Vulernability", data.V);
+                cmd.Parameters.AddWithValue("@Real_Light", data.RL);
+                cmd.Parameters.AddWithValue("@ChaimBell", data.CB);
+        
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        catch (MySqlException ex)
+        {
+            Debug.WriteLine($"MySQL 오류: {ex.Message}");
+        }
+    }
+    ```
+    - <img src='./day73/db에 구독 데이터 넣기.png'>
+
+#### 스마트홈 WPF 실시간 시각화 [스마트홈 모니터링 시각화](./day73/Day10Wpf/WpfSmartHomeApp/ViewModels/MainViewModel.cs)
+- **readonly는 생성자에서만 값 할당할 경우, 적음**
+0. WpfSmartHomeApp프로젝트 UI는 이전꺼 그대로[UI](./day71/Day08Wpf/WpfSmartHomeApp/Views/MainWindow.xaml)
+1. WpfSmartHomeApp프로젝트에 패키지 설치(json, mqttnet , mahapps, communitytoolkit)
+2. 데이터 담을 클래스 작성 
+    - 클래스 복사해올 때, namespace를 현재 프로젝트명으로 
+    ```csharp
+    namespace WpfSmartHomeApp.Models
+    {
+        public class SensingInfo
+        {}
+    }
+    ```
+3. MainViewModel.cs에서 속성 선언
+    ```csharp
+    // 실시간 데이터 값 구독해오기 위한 준비
+    private MySqlConnection connection;
+
+    //TOPIC 
+    private  string TOPIC;
+
+    private IMqttClient mqttClient;
+
+    private string BROKERHOST;
+    ```
+4. MainViewModel.cs에서 iot센서 데이터 구독 함수 선언
+    ```csharp
+     public partial class MainViewModel : ObservableObject , IDisposable
+     {
+        [RelayCommand]
+        public async Task OnLoaded()
+        {
+            BROKERHOST = "210.119.12.52";
+            connection = new MySqlConnection();
+            TOPIC = "pknu/sh01/data";
+
+             //mqtt 클라이언트 생성
+            var mqttFactory = new MqttClientFactory();
+            mqttClient = mqttFactory.CreateMqttClient();
+
+            //matt 클라이언트 접속 설정
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer(BROKERHOST)
+                .WithCleanSession(true)
+                .Build();
+
+            //mqtt 접속 후 이벤트 처리 메서드 선언 
+            mqttClient.ConnectedAsync += MqttClient_ConnectedAsync;
+
+            //mqtt 구독 메시지 확인 메서드 선언
+            mqttClient.ApplicationMessageReceivedAsync += MqttClient_ApplicationMessageReceivedAsync;
+
+            await mqttClient.ConnectAsync(mqttClientOptions);
+
+        }
+        public void Dispose()
+        {
+            connection?.Close();
+        }
+     }
+    ```
+5. MainViewModel.cs에서 iot센서 데이터 구독 함수 선언- 세부
+    ```csharp
+    //MqttClient_ConnectedAsync
+    private async Task MqttClient_ConnectedAsync(MqttClientConnectedEventArgs arg)
+    {
+        Common.LOGGER.Info("MQTT Borker 접속 성공!!");
+        //연결이후 구독(subscribe)
+        await mqttClient.SubscribeAsync(TOPIC);
+        
+    }
+    ```
+     ```csharp
+    //MqttClient_ApplicationMessageReceivedAsync
+    private  Task MqttClient_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
+    {
+
+        var topic = arg.ApplicationMessage.Topic;
+        var payload = arg.ApplicationMessage.ConvertPayloadToString(); //byte데이터를 utf-8문자열로 변환
+
+        // json으로 변경하여 db에저장하기 위한 과정
+        var data = JsonConvert.DeserializeObject<SensingInfo>(payload);
+        //Common.LOGGER.Info($"|Light:{data.L}|Rain:{data.R}|Temp:{data.T}|Humid:{data.H}|Fan:{data.F}|Detect:{data.V}|{data.RL}|{data.CB}|");
+
+        HomeTemp = data.T;
+        HomeHumid = data.H;
+
+        IsDetectOn = data.V == "ON" ? true : false;
+        DetectResult = IsDetectOn ? "Dectection State!!" : "Normal State";
+
+        IsConditionerOn = data.F == "ON" ? true : false;
+        ConditionerResult = IsConditionerOn ? "AirCon On!!" : "AirCon Off";
+
+        IsLightOn = data.RL ==  "ON" ? true : false;
+        LightResult = IsLightOn ? "Light On!!" : "Light Off";
+
+        IsRainOn = data.R <= 350 ? true : false;
+        RainResult = IsRainOn ? "Rain!!" : "No Rain";
+
+        // 구독 종료 알림
+        return Task.CompletedTask;
+    }
+    ```
+- 실행결과
