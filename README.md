@@ -3098,3 +3098,9 @@ https://github.com/user-attachments/assets/bbe29cda-5f82-4cec-89f7-cabecff99a56
 
 https://github.com/user-attachments/assets/35ca5b77-1594-4a81-855f-fb3ecfb9728c
 
+- 센서 조작 영상
+  
+
+
+https://github.com/user-attachments/assets/a931903b-927d-4903-a947-ea02cb3398fe
+
