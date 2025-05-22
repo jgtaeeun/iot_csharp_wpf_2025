@@ -3180,9 +3180,16 @@ https://github.com/user-attachments/assets/a931903b-927d-4903-a947-ea02cb3398fe
         }
     ```
 
+- 실행결과
+
+
+https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
+
 
 
 ## 75일차(5/23)
+- 국가유산 https://www.heritage.go.kr/heri/cul/culSelectViewList.do?gbn=2&pageNo=1_1_1_1&culPageNo=14&ccbaCndt=&searchCondition=&region=1&s_kdcdArr=00&s_ctcdArr=21&ccbaPcd1Arr=99&stCcbaAsdt=&endCcbaAsdt=&ccbaGcodeArr=00&sortType=&sortOrd=
+- api호출 http://apis.data.go.kr/6260000/BusanTblClthrtStusService/getTblClthrtStusInfo?serviceKey=&numOfRows=&pageNo=
 - 해야할 것
     - DetailView.xaml  - 디자인
     - item.cs 모델 클래스
