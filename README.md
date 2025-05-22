@@ -3104,3 +3104,91 @@ https://github.com/user-attachments/assets/35ca5b77-1594-4a81-855f-fb3ecfb9728c
 
 https://github.com/user-attachments/assets/a931903b-927d-4903-a947-ea02cb3398fe
 
+# 미니프로젝트
+- 주제 : 공공데이터의 문화재 현황 api를 통해 데이터를 읽어와 문화재 찾기 앱 구현
+- 기능 
+    - MainView.xaml : 앱 실행시 뜨는 첫 화면. 기본값은 오늘의 문화재인데 버튼을 통해 뷰를 바꿀 수 있음.
+    - TodayView.xaml :오늘의 문화재를 보여줌(랜덤으로 할당)
+    - LocationView.xaml : 사용자가 지역(시,도,군,구)을 입력해서 필터링해서 데이터리스트를 보여줌
+    - DetailView.xaml : 사용자가 선택한 문화재에 대한 더 상세한 설명은 국가유산 공식포털 페이지를 띄우도록 함.
+
+## 74일차(5/22)
+- 진행상황 
+    - 패키지 설치 - MahApps, CommunityTookit, CefSharp
+    - Models, Views, ViewModels 폴더 및 뷰, 뷰모델, 클래스 파일 생성
+    ```csharp
+    public partial class MainView : MetroWindow{}
+    public partial class LocationView : UserControl{}
+    public partial class TodayView : UserControl{}
+    ```
+    - App.xaml 리소스 및 뷰 변환, App.xaml.cs startUp
+    - UI디자인 - MainView.xaml ,TodayView.xaml,LocationView.xaml
+    - 버튼 클릭을 통한 화면 전환 - App.xaml에서 뷰 리소스 , MainView.xaml , MainViewModel.cs
+    ```xml
+    <Application x:Class="HeritageApp.App"
+             xmlns:views ="clr-namespace:HeritageApp.Views"
+             xmlns:vm ="clr-namespace:HeritageApp.ViewModels">
+        <Application.Resources>
+            <ResourceDictionary>
+                <DataTemplate DataType="{x:Type vm:LocationViewModel}">
+                    <views:LocationView />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:TodayViewModel}">
+                    <views:TodayView />
+                </DataTemplate>
+            </ResourceDictionary>
+        </Application.Resources>
+    </Application>
+     
+    ```
+    ```csharp
+    <mah:MetroWindow  xmlns:vm ="clr-namespace:HeritageApp.ViewModels">
+        <Window.DataContext>
+            <vm:MainViewModel />
+        </Window.DataContext>
+        <Grid>
+            <Button Content="오늘의 문화재 알아보기" Command ="{Binding ShowView1Command}"></Button>
+            <Button Content="우리동네 문화재 알아보기" Command ="{Binding ShowView2Command}"></Button>
+            <ContentControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding CurrentViewModel}" />
+        </Grid>
+    </mah:MetroWindow>
+    ```
+    ```csharp
+        private object currentViewModel;
+        public object CurrentViewModel
+        {
+            get => currentViewModel;
+            set => SetProperty(ref currentViewModel, value);    
+        }
+      
+
+        public MainViewModel()
+        {
+            ShowView1();
+        }
+
+        [RelayCommand]
+        private void ShowView1()
+        {
+            CurrentViewModel = new TodayViewModel();
+        }
+
+        [RelayCommand]
+        private void ShowView2()
+        {
+            CurrentViewModel = new LocationViewModel();
+        }
+    ```
+
+
+
+## 75일차(5/23)
+- 해야할 것
+    - DetailView.xaml  - 디자인
+    - item.cs 모델 클래스
+    - api로 데이터 읽어와서 오늘의 문화재 찾아보기 뷰에 랜덤 할당
+    - 오늘의 문화재 찾아보기에 오늘날짜, 달력시간 컨트롤 넣기
+    - 콤보박스 값 할당(지역, 시도, 구군)
+    - 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
+    - 지역별 문화재 뷰에 바인딩
+    - 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록 (cefsharp, xmnls:i 코드)
