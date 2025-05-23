@@ -3114,7 +3114,7 @@ https://github.com/user-attachments/assets/a931903b-927d-4903-a947-ea02cb3398fe
 
 ## 74일차(5/22)
 - 진행상황 
-    - 패키지 설치 - MahApps, CommunityTookit, CefSharp
+    - 패키지 설치 - MahApps, CommunityTookit, CefSharp , Newtonsoft.Json
     - Models, Views, ViewModels 폴더 및 뷰, 뷰모델, 클래스 파일 생성
     ```csharp
     public partial class MainView : MetroWindow{}
@@ -3191,11 +3191,18 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
 - 국가유산 https://www.heritage.go.kr/heri/cul/culSelectViewList.do?gbn=2&pageNo=1_1_1_1&culPageNo=14&ccbaCndt=&searchCondition=&region=1&s_kdcdArr=00&s_ctcdArr=21&ccbaPcd1Arr=99&stCcbaAsdt=&endCcbaAsdt=&ccbaGcodeArr=00&sortType=&sortOrd=
 - api호출 http://apis.data.go.kr/6260000/BusanTblClthrtStusService/getTblClthrtStusInfo?serviceKey=&numOfRows=&pageNo=
 - 해야할 것
-    - DetailView.xaml  - 디자인
-    - item.cs 모델 클래스
-    - api로 데이터 읽어와서 오늘의 문화재 찾아보기 뷰에 랜덤 할당
-    - 오늘의 문화재 찾아보기에 오늘날짜, 달력시간 컨트롤 넣기
-    - 콤보박스 값 할당(지역, 시도, 구군)
-    - 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
-    - 지역별 문화재 뷰에 바인딩
-    - 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록 (cefsharp, xmnls:i 코드)
+    - DetailView.xaml  - 디자인 (O)
+    - item.cs 모델 클래스 (O) 
+    - api로 데이터 읽어와서 오늘의 문화재 찾아보기 뷰에 랜덤 할당(O)
+    - 오늘의 문화재 찾아보기에 오늘날짜, 달력시간 컨트롤 넣기 (O)
+    - dates(지정일) /dataday (데이터업로드일)(O)
+
+## 75일차(5/23)    
+- 해야할 것
+    - totday ui디자인
+    - today  이미지 cefsharp
+    - today  오늘날짜 기본값, 달력시간 기본값, 오늘날짜 기준 몇년전 유산인지 계산기, 영어버전으로 읽기, 한국어버전으로 읽기
+    - location 콤보박스 값 할당(지역, 시도, 구군)
+    - location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
+    - location 지역별 문화재 뷰에 바인딩
+    - detail 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록
