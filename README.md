@@ -3197,11 +3197,13 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
     - 오늘의 문화재 찾아보기에 오늘날짜, 달력시간 컨트롤 넣기 (O)
     - dates(지정일) /dataday (데이터업로드일)(O)
 
-## 75일차(5/23)    
+## 6/2    
 - 해야할 것
-    - totday ui디자인
+    - today ui디자인
     - today  이미지 cefsharp
-    - today  오늘날짜 기본값, 달력시간 기본값, 오늘날짜 기준 몇년전 유산인지 계산기, 영어버전으로 읽기, 한국어버전으로 읽기
+    - today  오늘날짜 기본값, 오늘날짜 기준 몇년전 유산인지 계산기, 
+## 6/4 
+    - today 영어버전으로 읽기, 한국어버전으로 읽기
     - location 콤보박스 값 할당(지역, 시도, 구군)
     - location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
     - location 지역별 문화재 뷰에 바인딩
