@@ -3203,8 +3203,54 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
     - today  이미지 cefsharp
     - today  오늘날짜 기본값, 오늘날짜 기준 몇년전 유산인지 계산기, 
 ## 6/4 
-    - today 영어버전으로 읽기, 한국어버전으로 읽기
-    - location 콤보박스 값 할당(지역, 시도, 구군)
-    - location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
-    - location 지역별 문화재 뷰에 바인딩
-    - detail 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록
+- today 영어버전으로 읽기, 한국어버전으로 읽기 
+    - today뷰에서 버튼 command 속성 , today뷰모델에서 command정의 
+    - 번역기 돌린 화면의 개발자도구-요소-html코드를 불러와서 필요한부분인 span태그 내용 추출
+    - NuGet 패키지 매니저를 통해 설치- Selenium.WebDriver, Selenium.WebDriver.ChromeDriver
+    ```cs
+    public async Task<string> GetTranslatedTextAsync(string input)
+    {
+        try
+        {
+            
+            var encodedInput = Uri.EscapeDataString(input);
+            var url = $"https://translate.google.co.kr/?sl=auto&tl=en&text={encodedInput}&op=translate";
+            var options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--disable-gpu");
+            options.AddArgument("--no-sandbox");
+            options.AddArgument("--disable-dev-shm-usage");
+
+            using (var driver = new ChromeDriver(options))
+            {
+                driver.Navigate().GoToUrl(url);
+
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(100));
+
+                // 더 안정적인 jsname 속성으로 요소 찾기
+                var translatedElement = wait.Until(d =>
+                {
+                    var elements = d.FindElements(By.CssSelector("span.ryNqvb[jsname='W297wb']"));
+                    return elements.FirstOrDefault(e => e.Displayed);
+                });
+
+                return translatedElement?.Text ?? "번역된 텍스트를 찾을 수 없습니다.";
+            }
+        }
+        catch (NoSuchElementException ex)
+        {
+            Common.LOGGER.Error($"[Selenium] Element not found: {ex.Message}");
+            return "번역된 텍스트를 찾을 수 없습니다.";
+        }
+        catch (Exception ex)
+        {
+            Common.LOGGER.Fatal($"[Selenium Fatal Error] {ex}");
+            return "번역 중 오류가 발생했습니다.";
+        }
+    }
+    ```
+    - 한번에 로드될까=>번역기가 길어지니 빠뜨리는게 생김으로 예외계속 발생 =>개별로 하자!!
+- location 콤보박스 값 할당(지역, 시도, 구군)
+- location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
+- location 지역별 문화재 뷰에 바인딩
+- detail 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록
