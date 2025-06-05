@@ -3250,7 +3250,9 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
     }
     ```
     - 한번에 로드될까=>번역기가 길어지니 빠뜨리는게 생김으로 예외계속 발생 =>개별로 하자!!
-- location 콤보박스 값 할당(지역, 시도, 구군)
+## 6/5
+- location 콤보박스 값 할당(시도, 구군)
 - location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
-- location 지역별 문화재 뷰에 바인딩
+## 6/9
+- location 지역별 문화재 뷰에 바인딩 - true로 하면 나오는데 false로 DataGridTextColumn을 직접 하니 뜨지 않음. 해결필요
 - detail 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록
