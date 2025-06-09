@@ -3190,7 +3190,7 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
 ## 75일차(5/23)
 - 국가유산 https://www.heritage.go.kr/heri/cul/culSelectViewList.do?gbn=2&pageNo=1_1_1_1&culPageNo=14&ccbaCndt=&searchCondition=&region=1&s_kdcdArr=00&s_ctcdArr=21&ccbaPcd1Arr=99&stCcbaAsdt=&endCcbaAsdt=&ccbaGcodeArr=00&sortType=&sortOrd=
 - api호출 http://apis.data.go.kr/6260000/BusanTblClthrtStusService/getTblClthrtStusInfo?serviceKey=&numOfRows=&pageNo=
-- 해야할 것
+- 진행상황
     - DetailView.xaml  - 디자인 (O)
     - item.cs 모델 클래스 (O) 
     - api로 데이터 읽어와서 오늘의 문화재 찾아보기 뷰에 랜덤 할당(O)
@@ -3198,10 +3198,12 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
     - dates(지정일) /dataday (데이터업로드일)(O)
 
 ## 6/2    
-- 해야할 것
+- 진행상황
     - today ui디자인
     - today  이미지 cefsharp
-    - today  오늘날짜 기본값, 오늘날짜 기준 몇년전 유산인지 계산기, 
+    - today  오늘날짜 기본값, 오늘날짜 기준 몇년전 유산인지 계산기
+    - <img src='./today뷰.png' width=500>
+
 ## 6/4 
 - today 영어버전으로 읽기, 한국어버전으로 읽기 
     - today뷰에서 버튼 command 속성 , today뷰모델에서 command정의 
@@ -3250,9 +3252,61 @@ https://github.com/user-attachments/assets/42d78017-2705-4b4a-8d47-e4ec55f92b02
     }
     ```
     - 한번에 로드될까=>번역기가 길어지니 빠뜨리는게 생김으로 예외계속 발생 =>개별로 하자!!
+    - <img src='./today뷰 영어.png' width=500>
 ## 6/5
 - location 콤보박스 값 할당(시도, 구군)
 - location 지역 입력값 + api로 데이터 읽어와서 문화재 리스트
+- <img src='./location뷰.png' width=500>
 ## 6/9
-- location 지역별 문화재 뷰에 바인딩 - true로 하면 나오는데 false로 DataGridTextColumn을 직접 하니 뜨지 않음. 해결필요
+- location 지역별 문화재 뷰에 바인딩 - true로 하면 나오는데 false로 DataGridTextColumn을 직접 하니 뜨지 않음  =>해결함
+    - 디버깅해서 필드첫번째가 대문자인 것을 확인함.
+    - Binding문법 오류였음
+    ```cs
+    <DataGrid
+    ItemsSource="{Binding TodayItems}">
+    <DataGrid.Columns>
+        <DataGridTextColumn Header="문화재명" FontWeight="Bold" Binding="{Binding CultHeritNm}" />
+        <DataGridTextColumn Header="지정번호" FontWeight="Bold" Binding="{Binding Number}" />
+        <DataGridTextColumn Header="지정일자" FontWeight="Bold" Binding="{Binding Dates}" />
+        <DataGridTextColumn Header="시대" FontWeight="Bold" Binding="{Binding Era}" />
+        <DataGridTextColumn Header="종별" FontWeight="Bold" Binding="{Binding Kind}" />
+    </DataGrid.Columns>
+    </DataGrid>
+
+    ```
+    
 - detail 더블클릭했을 때, 디테일뷰가 나오고 이 뷰에 국가유산 포털 연결되도록
+- <img src='./detail뷰.png' width=500>
+
+
+# 미니 프로젝트
+### 국가문화유산 랜덤 탐색 시스템 개발 보고서
+1. 개요 및 목적
+    - 사용자가 매일 하나의 국가문화유산을 랜덤하게 탐색하고, 그 유산의 상세정보, 지정일자, 시대, 지역 등의 정보를 확인할 수 있도록 하는 데 목적이 있습니다.
+    - 또한, 지역 필터링 기능, 언어 번역 기능, 국가유산 포털 연동 등 다양한 부가 기능을 통해 문화유산 정보의 접근성과 활용성을 높이고자 합니다.
+    - 이 시스템은 교육적 목적, 박물관 안내 앱, 관광지 연계 콘텐츠 등에 응용될 수 있는 프로토타입 형태로 구현되었습니다.
+
+2. 주요 기능
+
+|view|기능|설명|
+|:--:|:--:|:--:|
+|TodayView|오늘의 문화재 랜덤 배정|앱 실행 시, API를 통해 랜덤으로 문화재 1건을 보여줌|
+|TodayView|오늘날짜 기반 계산기|문화재 지정일과 오늘 날짜를 기준으로 얼마나 오래되었는지 자동 계산|
+|TodayView|다국어 번역 기능|Google Translate 웹 번역기 + Selenium을 활용해 한국어 → 영어로 자동 번역|
+|LocationView|지역별 검색 기능|시도, 구군 등 지역 정보를 입력하면 해당 지역의 문화재 리스트를 바인딩|
+|DetailView|상세보기 및 외부 링크 연동|목록에서 문화재를 더블클릭하면 DetailView로 이동하며, 국가유산 포털 웹페이지를 연동 표시|
+
+3. 시스템 구조
+
+```yaml
+MainView
+├── TodayView
+└── LocationView
+    └── DetailView
+```
+
+4. 실행결과
+
+
+
+5. 프로젝트 수행 중 새롭게 학습한 내용
