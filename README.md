@@ -3314,3 +3314,72 @@ https://github.com/user-attachments/assets/8d7ef4c1-2955-4b38-8b23-8be4f12dcf88
 
 
 5. 프로젝트 수행 중 새롭게 학습한 내용
+
+    1. WPF + MVVM 구조에서 동적으로 View를 전환 - Button 클릭 시 CurrentViewModel을 바꾸고, ContentControl이 이를 감지해서 해당 ViewModel에 맞는 View를 보여주는 구조
+        - ContentControl + DataTemplate
+        - MainView.xaml
+            ```xml
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="5" HorizontalAlignment="Right">
+                <Button Content="오늘의 문화재 알아보기" Style="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}"
+                        Margin="5,0,5,0" Height="30" Command ="{Binding ShowView1Command}"></Button>
+                <Button Content="우리동네 문화재 알아보기" Style="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}" 
+                        Margin="0,0,5,0" Height="30" Command ="{Binding ShowView2Command}"></Button>
+            </StackPanel>
+            <ContentControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding CurrentViewModel}" />
+            ```
+        - MainView.cs
+            ```cs
+
+            private object currentViewModel;
+            public object CurrentViewModel
+            {
+                get => currentViewModel;
+                set => SetProperty(ref currentViewModel, value);    
+            }
+                
+
+            public MainViewModel()
+            {
+                ShowView1();
+            }
+
+            [RelayCommand]
+            private void ShowView1()
+            {
+                CurrentViewModel = new TodayViewModel();
+            }
+
+            [RelayCommand]
+            private void ShowView2()
+            {
+                CurrentViewModel = new LocationViewModel();
+            }
+            ```
+        - App.xaml
+            ```xml
+            <DataTemplate DataType="{x:Type vm:LocationViewModel}">
+                <views:LocationView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TodayViewModel}">
+                <views:TodayView />
+            </DataTemplate>
+            ```
+    2. WPF에서 <DataGridTextColumn>의 Binding 속성
+        - 기본 개념: Binding="{Binding PropertyName}"
+        - Binding="{Binding CultHeritNm}" 은 현재 행(Row)의 데이터 객체의 CultHeritNm 속성에 바인딩한다는 뜻입니다.
+        - 바인딩 경로에서 대소문자 구분이 중요합니다.
+        - 정확한 속성 이름 사용해야 합니다.
+    3. Google 번역 사이트에 자동으로 접속하여, 지정한 텍스트를 영어로 번역하고, 번역 결과(span 요소)에 있는 텍스트를 추출
+        - Selenium - 웹 데이터 수집 (스크래핑)
+        - Selenium WebDriver: 작동 원리
+            - WebDriver 객체 생성
+            - URL 열기
+            - HTML 요소 찾기 및 제어 - FindElement()로 버튼, 텍스트박스 등 찾기
+            - 자동화 동작 수행
+            - 종료
+
+
+6. 출처
+    - 공공테이터포털 https://www.data.go.kr/
+    - 구글번역  https://translate.google.co.kr/?sl=auto&tl=en&op=translate
+    - 국가유산포털 https://www.heritage.go.kr/main/?v=1749440296009
