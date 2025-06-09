@@ -3309,4 +3309,8 @@ MainView
 
 
 
+https://github.com/user-attachments/assets/8d7ef4c1-2955-4b38-8b23-8be4f12dcf88
+
+
+
 5. 프로젝트 수행 중 새롭게 학습한 내용
